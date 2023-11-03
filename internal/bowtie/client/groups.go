@@ -16,9 +16,21 @@ type Group struct {
 	Users []string `json:"users,omitempty"`
 }
 
+type UserSpecifierSubId struct {
+	Provider string `json:"provider"`
+	SubID string `json:"subject_id"`
+}
+
+/// One of these must be set
+type UserSpecifier struct {
+	ID string `json:"id,omitempty"`
+	Email string `json:"email,omitempty"`
+	SubID UserSpecifierSubId `json:"sub,omitempty"`
+}
+
 type ModifyUserGroupPayload struct {
 	GroupID string   `json:"group_id"`
-	UserID  []string `json:"user_id"`
+	UserID  []UserSpecifier `json:"user_id"`
 }
 
 type ModifyUserGroupResponse struct {
@@ -26,7 +38,7 @@ type ModifyUserGroupResponse struct {
 }
 
 type SetUserGroupMembershipPayload struct {
-	Users []string `json:"users"`
+	Users []UserSpecifier `json:"users"`
 }
 
 func (c *Client) GetGroup(id string) (*Group, error) {
@@ -119,6 +131,7 @@ func (c *Client) RemoveUserFromGroup(groupID string, userIDs []string) (*ModifyU
 }
 
 func (c *Client) modifyUserGroup(action, groupID string, userIDs []string) (*ModifyUserGroupResponse, error) {
+	
 	payload, err := json.Marshal(ModifyUserGroupPayload{
 		GroupID: groupID,
 		UserID:  userIDs,
@@ -153,7 +166,7 @@ func (c *Client) DeleteGroup(groupID string) error {
 	return err
 }
 
-func (c *Client) SetGroupMembership(groupID string, users []string) error {
+func (c *Client) SetGroupMembership(groupID string, users []UserSpecifier) error {
 	payload := SetUserGroupMembershipPayload{
 		Users: users,
 	}
