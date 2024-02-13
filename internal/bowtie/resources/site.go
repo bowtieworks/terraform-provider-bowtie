@@ -109,10 +109,11 @@ func (s *siteResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	site, err := s.client.GetSite(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		/*resp.Diagnostics.AddError(
 			"Failed retrieving site information from bowtie",
 			"Unexpected error retrieving site info from bowtie server: "+err.Error(),
-		)
+		)*/
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

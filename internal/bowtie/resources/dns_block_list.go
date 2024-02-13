@@ -162,10 +162,11 @@ func (bl *dnsBlockListResource) Read(ctx context.Context, req resource.ReadReque
 
 	blocklist, err := bl.client.GetDNSBlockList(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		/*resp.Diagnostics.AddInfo(
 			"Failed retrieving DNS block list",
 			"Unexpected error retrieving DNS block list from Bowtie API: "+err.Error(),
-		)
+		)*/
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

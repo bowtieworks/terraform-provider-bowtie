@@ -193,10 +193,11 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	resource, err := r.client.GetResource(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		/*resp.Diagnostics.AddError(
 			"Unexpected error retrieving the resource",
 			"Failed to retrieve resource: "+state.ID.ValueString()+" error: "+err.Error(),
-		)
+		)*/
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

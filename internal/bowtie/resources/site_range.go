@@ -176,10 +176,11 @@ func (sr *siteRangeResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	info, err := sr.client.GetSiteRange(state.SiteID.ValueString(), state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		/*resp.Diagnostics.AddError(
 			"Failed to retrieve site range info from the bowtie server",
 			"Unexpected error reading from the bowtie server error: "+err.Error(),
-		)
+		)*/
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
