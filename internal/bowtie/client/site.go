@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 func (c *Client) ListSites() ([]Site, error) {
@@ -18,19 +16,23 @@ func (c *Client) ListSites() ([]Site, error) {
 	return org.Sites, nil
 }
 
-func (c *Client) GetSite(id string) (*Site, error) {
+func (c *Client) GetSites() ([]Site, error) {
 	org, err := c.GetOrganization()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, site := range org.Sites {
-		if site.ID == id {
+	return org.Sites, nil
+}
+
+func FindSite(siteID string, sites []Site) (*Site, error) {
+	for _, site := range sites {
+		if site.ID == siteID {
 			return &site, nil
 		}
 	}
 
-	return nil, fmt.Errorf("site not found")
+	return nil, fmt.Errorf("site not found: %s", siteID)
 }
 
 type SiteUpsertPayload struct {
@@ -38,14 +40,13 @@ type SiteUpsertPayload struct {
 	Name string `json:"name"`
 }
 
-func (c *Client) CreateSite(name string) (string, error) {
-	id := uuid.NewString()
+func (c *Client) CreateSite(id string, name string) error {
 	err := c.UpsertSite(id, name)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (c *Client) UpsertSite(id, name string) error {
@@ -94,12 +95,6 @@ func (c *Client) DeleteSite(siteID string) error {
 	return err
 }
 
-func (c *Client) CreateSiteRange(siteID, name, description, cidr string, isV4, isV6 bool, weight, metric int64) (string, error) {
-	id := uuid.NewString()
-
-	return id, c.UpsertSiteRange(siteID, id, name, description, cidr, isV4, isV6, weight, metric)
-}
-
 func (c *Client) UpsertSiteRange(siteID, id, name, description, cidr string, isV4, isV6 bool, weight, metric int64) error {
 	payload := siteRangePayload{
 		ID:          id,
@@ -137,34 +132,21 @@ func (c *Client) DeleteSiteRange(siteID, id string) error {
 	return err
 }
 
-func (c *Client) GetSiteRange(siteID, id string) (*RoutableRange, error) {
-	org, err := c.GetOrganization()
-	if err != nil {
-		return nil, err
-	}
-
-	sites := org.Sites
-
-	for _, site := range sites {
-		if site.ID == siteID {
-			// return which range type it is
-			for _, info := range site.RoutableRangesV4 {
-				if info.ID == id {
-					info.ISV4 = true
-					return &info, nil
-				}
-			}
-
-			for _, info := range site.RouteRangesV6 {
-				if info.ID == id {
-					info.ISV6 = true
-					return &info, nil
-				}
-			}
-
-			return nil, fmt.Errorf("routable range not found in site: %s range: %s", siteID, id)
+func (c *Client) FindSiteRange(site *Site, id string) (*RoutableRange, error) {
+	// return which range type it is
+	for _, info := range site.RoutableRangesV4 {
+		if info.ID == id {
+			info.ISV4 = true
+			return &info, nil
 		}
 	}
 
-	return nil, fmt.Errorf("site not found: %s", siteID)
+	for _, info := range site.RouteRangesV6 {
+		if info.ID == id {
+			info.ISV6 = true
+			return &info, nil
+		}
+	}
+
+	return nil, fmt.Errorf("routable range not found in site: range: %s", id)
 }

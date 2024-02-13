@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -133,7 +134,12 @@ func (bl *dnsBlockListResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	id, err := bl.client.CreateDNSBlockList(
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	err := bl.client.UpsertDNSBlockList(
+		plan.ID.ValueString(),
 		plan.Name.ValueString(),
 		plan.Upstream.ValueString(),
 		strings.Join(overrides, "\n"),
@@ -147,7 +153,6 @@ func (bl *dnsBlockListResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	plan.ID = types.StringValue(id)
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -160,12 +165,24 @@ func (bl *dnsBlockListResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	blocklist, err := bl.client.GetDNSBlockList(state.ID.ValueString())
+	// Pull in the list of blocklists from the API; failures here
+	// indicate API-level errors like 400s or 500s
+	blocklists, err := bl.client.GetDNSBlockLists()
 	if err != nil {
-		/*resp.Diagnostics.AddInfo(
+		resp.Diagnostics.AddError(
 			"Failed retrieving DNS block list",
 			"Unexpected error retrieving DNS block list from Bowtie API: "+err.Error(),
-		)*/
+		)
+		return
+	}
+
+	blocklist, present := blocklists[state.ID.ValueString()]
+	if !present {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
 		resp.State.RemoveResource(ctx)
 		return
 	}

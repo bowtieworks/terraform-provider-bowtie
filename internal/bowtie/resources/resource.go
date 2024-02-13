@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -170,7 +171,21 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	id, _, err := r.client.CreateResource(ctx, plan.Name.ValueString(), plan.Protocol.ValueString(), plan.Location.IP.ValueString(), plan.Location.CIDR.ValueString(), plan.Location.DNS.ValueString(), portsRange, portsCollection)
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	_, err := r.client.UpsertResource(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		plan.Protocol.ValueString(),
+		plan.Location.IP.ValueString(),
+		plan.Location.CIDR.ValueString(),
+		plan.Location.DNS.ValueString(),
+		portsRange,
+		portsCollection,
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unexpected error from bowtie API",
@@ -178,8 +193,6 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		)
 		return
 	}
-
-	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -191,12 +204,22 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resource, err := r.client.GetResource(state.ID.ValueString())
+	resources, err := r.client.GetResources()
 	if err != nil {
-		/*resp.Diagnostics.AddError(
+		resp.Diagnostics.AddError(
 			"Unexpected error retrieving the resource",
 			"Failed to retrieve resource: "+state.ID.ValueString()+" error: "+err.Error(),
-		)*/
+		)
+		return
+	}
+
+	resource, present := resources[state.ID.ValueString()]
+	if !present {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -279,7 +302,17 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	_, err := r.client.UpsertResource(ctx, plan.ID.ValueString(), plan.Name.ValueString(), plan.Protocol.ValueString(), plan.Location.IP.ValueString(), plan.Location.CIDR.ValueString(), plan.Location.DNS.ValueString(), portsRange, portsCollection)
+	_, err := r.client.UpsertResource(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		plan.Protocol.ValueString(),
+		plan.Location.IP.ValueString(),
+		plan.Location.CIDR.ValueString(),
+		plan.Location.DNS.ValueString(),
+		portsRange,
+		portsCollection,
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed updating resource",

@@ -58,13 +58,7 @@ type BowtieResourcePortCollection struct {
 	Ports []int64 `json:"ports,omitempty"`
 }
 
-func (c *Client) CreateResource(ctx context.Context, name, protocol string, ip, cidr, dns string, portRange, portCollection []int64) (string, BowtieResource, error) {
-	id := uuid.NewString()
-	resource, err := c.UpsertResource(ctx, id, name, protocol, ip, cidr, dns, portRange, portCollection)
-	return id, resource, err
-}
-
-func (c *Client) UpsertResource(ctx context.Context, id, name, protocol, ip, cidr, dns string, portRange, portCollection []int64) (BowtieResource, error) {
+func (c *Client) UpsertResource(id, name, protocol, ip, cidr, dns string, portRange, portCollection []int64) (BowtieResource, error) {
 	payload := BowtieResource{
 		ID:       id,
 		Name:     name,
@@ -158,18 +152,13 @@ func (c *Client) GetResourceGroup(id string) (BowtieResourceGroup, error) {
 	return BowtieResourceGroup{}, fmt.Errorf("resource_group not found")
 }
 
-func (c *Client) GetResource(id string) (BowtieResource, error) {
+func (c *Client) GetResources() (map[string]BowtieResource, error) {
 	rp, err := c.GetPoliciesAndResources()
 	if err != nil {
-		return BowtieResource{}, err
+		return make(map[string]BowtieResource), err
 	}
 
-	for _, val := range rp.Resources {
-		if val.ID == id {
-			return val, nil
-		}
-	}
-	return BowtieResource{}, fmt.Errorf("expected resource not found")
+	return rp.Resources, nil
 }
 
 func (c *Client) DeletePolicy(id string) error {
