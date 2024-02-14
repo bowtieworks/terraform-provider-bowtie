@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -100,7 +101,16 @@ func (rg *resourceGroupResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	id, err := rg.client.CreateResourceGroup(ctx, plan.Name.ValueString(), resources, resource_groups)
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	err := rg.client.UpsertResourceGroup(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		resources,
+		resource_groups,
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to create the resource group",
@@ -108,8 +118,6 @@ func (rg *resourceGroupResource) Create(ctx context.Context, req resource.Create
 		)
 		return
 	}
-
-	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -122,9 +130,7 @@ func (rg *resourceGroupResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("!!!!!!!!! %+v", state))
-
-	resourceGroup, err := rg.client.GetResourceGroup(state.ID.ValueString())
+	resourceGroups, err := rg.client.GetResourceGroups()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read the resource group",
@@ -133,7 +139,16 @@ func (rg *resourceGroupResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("########### %+v - id: %s", resourceGroup, state.ID.ValueString()))
+	resourceGroup, present := resourceGroups[state.ID.ValueString()]
+	if !present {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	state.Name = types.StringValue(resourceGroup.Name)
 
@@ -176,7 +191,13 @@ func (rg *resourceGroupResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	err := rg.client.UpsertResourceGroup(ctx, plan.ID.ValueString(), plan.Name.ValueString(), resources, resource_groups)
+	err := rg.client.UpsertResourceGroup(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		resources,
+		resource_groups,
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed updating the resource group",

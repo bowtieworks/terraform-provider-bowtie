@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type BowtieUser struct {
@@ -54,7 +52,7 @@ func (c *Client) GetUserByEmail(ctx context.Context, email string) (BowtieUser, 
 	return BowtieUser{}, fmt.Errorf("user not found")
 }
 
-func (c *Client) GetUser(ctx context.Context, id string) (BowtieUser, error) {
+func (c *Client) GetUser(id string) (BowtieUser, error) {
 	req, err := http.NewRequest(http.MethodGet, c.getHostURL(fmt.Sprintf("/user/%s", id)), nil)
 	if err != nil {
 		return BowtieUser{}, nil
@@ -100,12 +98,7 @@ func (c *Client) DisableUser(ctx context.Context, id string) error {
 	return err
 }
 
-func (c *Client) CreateUser(ctx context.Context, name, email, role string, authzPolicies, authzUsers, authzControlPlane, authzDevices, enabled bool) (string, error) {
-	id := uuid.NewString()
-	return c.UpsertUser(ctx, id, name, email, role, authzPolicies, authzUsers, authzControlPlane, authzDevices, enabled)
-}
-
-func (c *Client) UpsertUser(ctx context.Context, id, name, email, role string, authzPolicies, authzUsers, authzControlPlane, authzDevices, enabled bool) (string, error) {
+func (c *Client) UpsertUser(id, name, email, role string, authzPolicies, authzUsers, authzControlPlane, authzDevices, enabled bool) (string, error) {
 	payload := BowtieUser{
 		ID:                id,
 		Name:              name,

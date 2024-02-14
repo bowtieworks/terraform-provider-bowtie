@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type Group struct {
@@ -29,17 +27,13 @@ type SetUserGroupMembershipPayload struct {
 	Users []map[string]string `json:"users"`
 }
 
-func (c *Client) GetGroup(id string) (*Group, error) {
+func (c *Client) GetGroups() (map[string]Group, error) {
 	groups, err := c.ListGroups()
 	if err != nil {
 		return nil, err
 	}
 
-	group, ok := groups[id]
-	if !ok {
-		return nil, fmt.Errorf("failed to find group with id: %s", id)
-	}
-	return &group, nil
+	return groups, nil
 }
 
 func (c *Client) ListGroups() (map[string]Group, error) {
@@ -60,10 +54,6 @@ func (c *Client) ListGroups() (map[string]Group, error) {
 	}
 
 	return groups, nil
-}
-
-func (c *Client) CreateGroup(name string) (string, error) {
-	return c.UpsertGroup(uuid.NewString(), name)
 }
 
 func (c *Client) UpsertGroup(id, name string) (string, error) {

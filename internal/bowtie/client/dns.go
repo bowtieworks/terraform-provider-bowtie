@@ -5,14 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/google/uuid"
 )
-
-func (c *Client) CreateDNS(name string, serverAddrs []Server, includeOnlySites []string, isDNS64, isCounted, isLog, isDropA, isDropAll, isSearchDomain bool, exlude []DNSExclude) (string, error) {
-	id := uuid.NewString()
-	return id, c.UpsertDNS(id, name, serverAddrs, includeOnlySites, isDNS64, isCounted, isLog, isDropA, isDropAll, isSearchDomain, exlude)
-}
 
 func (c *Client) UpsertDNS(id, name string, serverAddrs []Server, includeOnlySites []string, isDNS64, isCounted, isLog, isDropA, isDropAll, isSearchDomain bool, exlude []DNSExclude) error {
 	var servers map[string]Server = map[string]Server{}
@@ -62,16 +55,11 @@ func (c *Client) DeleteDNS(id string) error {
 	return err
 }
 
-func (c *Client) GetDNS(id string) (*DNS, error) {
+func (c *Client) GetDNS() (map[string]DNS, error) {
 	org, err := c.GetOrganization()
 	if err != nil {
 		return nil, err
 	}
 
-	result, ok := org.DNS[id]
-	if !ok {
-		return nil, fmt.Errorf("failed to locate the dns object")
-	}
-
-	return &result, nil
+	return org.DNS, nil
 }

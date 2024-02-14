@@ -2,12 +2,9 @@ package client
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 type PoliciesEndpointResponse struct {
@@ -137,19 +134,13 @@ func (c *Client) GetPolicy(id string) (BowtiePolicy, error) {
 	return policy, nil
 }
 
-func (c *Client) GetResourceGroup(id string) (BowtieResourceGroup, error) {
+func (c *Client) GetResourceGroups() (map[string]BowtieResourceGroup, error) {
 	rp, err := c.GetPoliciesAndResources()
 	if err != nil {
-		return BowtieResourceGroup{}, nil
+		return make(map[string]BowtieResourceGroup), nil
 	}
 
-	for _, val := range rp.ResourceGroups {
-		if val.ID == id {
-			return val, nil
-		}
-	}
-
-	return BowtieResourceGroup{}, fmt.Errorf("resource_group not found")
+	return rp.ResourceGroups, nil
 }
 
 func (c *Client) GetResources() (map[string]BowtieResource, error) {
@@ -181,12 +172,7 @@ func (c *Client) DeleteResource(id string) error {
 	return err
 }
 
-func (c *Client) CreateResourceGroup(ctx context.Context, name string, resources, resource_groups []string) (string, error) {
-	id := uuid.NewString()
-	return id, c.UpsertResourceGroup(ctx, id, name, resources, resource_groups)
-}
-
-func (c *Client) UpsertResourceGroup(ctx context.Context, id, name string, resources, resource_groups []string) error {
+func (c *Client) UpsertResourceGroup(id, name string, resources, resource_groups []string) error {
 	payload := BowtieResourceGroup{
 		ID:        id,
 		Name:      name,

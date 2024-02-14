@@ -33,7 +33,7 @@ func init() {
 				}
 
 				if user.Role == "Owner" {
-					_, err := client.UpsertUser(ctx, user.ID, "", "", "User", false, false, false, false, false)
+					_, err := client.UpsertUser(user.ID, "", "", "User", false, false, false, false, false)
 					if err != nil {
 						fmt.Println("[Error] Failed to demote user")
 						continue

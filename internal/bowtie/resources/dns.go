@@ -226,7 +226,23 @@ func (d *dnsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		})
 	}
 
-	id, err := d.client.CreateDNS(plan.Name.ValueString(), servers, includeSites, plan.IsDNS64.ValueBool(), plan.IsCounted.ValueBool(), plan.IsLog.ValueBool(), plan.IsDropA.ValueBool(), plan.IsDropAll.ValueBool(), plan.IsSearchDomain.ValueBool(), excludes)
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	err := d.client.UpsertDNS(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		servers,
+		includeSites,
+		plan.IsDNS64.ValueBool(),
+		plan.IsCounted.ValueBool(),
+		plan.IsLog.ValueBool(),
+		plan.IsDropA.ValueBool(),
+		plan.IsDropAll.ValueBool(),
+		plan.IsSearchDomain.ValueBool(),
+		excludes,
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed talking to bowtie server",
@@ -234,7 +250,6 @@ func (d *dnsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 	}
 
-	plan.ID = types.StringValue(id)
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	plan.Servers = []dnsServersResourceModel{}
@@ -273,12 +288,23 @@ func (d *dnsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	dns, err := d.client.GetDNS(state.ID.ValueString())
+	dnss, err := d.client.GetDNS()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed communicating with the bowtie api",
 			"Unexpected error reading DNS settings: "+err.Error(),
 		)
+		return
+	}
+
+	dns, present := dnss[state.ID.ValueString()]
+	if !present {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
