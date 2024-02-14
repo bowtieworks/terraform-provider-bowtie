@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	resourceName = "bowtie_dns_block_list.test"
+	blresourceName = "bowtie_dns_block_list.test"
 
 	blName       = "Test DNS Block List"
 	blNameChange = "Different DNS Block List name"
@@ -27,19 +27,19 @@ func TestDNSBlockListResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Basic tests for upstream URLs
 			{
-				Config: getDNSBlockListConfig(resourceName, blName, blUrl, blOverride),
+				Config: getDNSBlockListConfig(blresourceName, blName, blUrl, blOverride),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", blName),
-					resource.TestCheckResourceAttr(resourceName, "upstream", blUrl),
-					resource.TestCheckResourceAttr(resourceName, "override_to_allow.0", blOverride[0]),
-					resource.TestCheckResourceAttr(resourceName, "override_to_allow.1", blOverride[1]),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated"),
+					resource.TestCheckResourceAttr(blresourceName, "name", blName),
+					resource.TestCheckResourceAttr(blresourceName, "upstream", blUrl),
+					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.0", blOverride[0]),
+					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.1", blOverride[1]),
+					resource.TestCheckResourceAttrSet(blresourceName, "id"),
+					resource.TestCheckResourceAttrSet(blresourceName, "last_updated"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName:      resourceName,
+				ResourceName:      blresourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				// The last_updated attribute does not exist in the HashiCups
@@ -48,15 +48,15 @@ func TestDNSBlockListResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: getDNSBlockListConfig(resourceName, blNameChange, blUrlChange, blOverrideChange),
+				Config: getDNSBlockListConfig(blresourceName, blNameChange, blUrlChange, blOverrideChange),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", blNameChange),
-					resource.TestCheckResourceAttr(resourceName, "upstream", blUrlChange),
-					resource.TestCheckResourceAttr(resourceName, "override_to_allow.0", blOverrideChange[0]),
-					resource.TestCheckResourceAttr(resourceName, "override_to_allow.1", blOverrideChange[1]),
-					resource.TestCheckResourceAttr(resourceName, "override_to_allow.2", blOverrideChange[2]),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated"),
+					resource.TestCheckResourceAttr(blresourceName, "name", blNameChange),
+					resource.TestCheckResourceAttr(blresourceName, "upstream", blUrlChange),
+					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.0", blOverrideChange[0]),
+					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.1", blOverrideChange[1]),
+					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.2", blOverrideChange[2]),
+					resource.TestCheckResourceAttrSet(blresourceName, "id"),
+					resource.TestCheckResourceAttrSet(blresourceName, "last_updated"),
 				),
 			},
 		},
