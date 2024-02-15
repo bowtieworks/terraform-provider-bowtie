@@ -78,10 +78,10 @@ func deleteSiteRangeResources() {
 
 	for _, site := range sites {
 		for _, siteRange := range site.RoutableRangesV4 {
-			client.DeleteSiteRange(site.ID, siteRange.ID)
+			_ = client.DeleteSiteRange(site.ID, siteRange.ID)
 		}
 		for _, siteRange := range site.RouteRangesV6 {
-			client.DeleteSiteRange(site.ID, siteRange.ID)
+			_ = client.DeleteSiteRange(site.ID, siteRange.ID)
 		}
 	}
 }

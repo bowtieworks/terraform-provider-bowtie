@@ -80,7 +80,7 @@ func deleteDNSBlockListResources() {
 	// Pretty simple blanket statement to just remove everything.
 	blocklists, _ := client.GetDNSBlockLists()
 	for id := range blocklists {
-		client.DeleteDNSBlockList(id)
+		_ = client.DeleteDNSBlockList(id)
 	}
 }
 

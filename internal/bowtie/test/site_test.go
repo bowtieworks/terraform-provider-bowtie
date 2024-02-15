@@ -56,6 +56,6 @@ func deleteSiteResources() {
 	// Pretty simple blanket statement to just remove everything.
 	sites, _ := client.GetSites()
 	for _, site := range sites {
-		client.DeleteSite(site.ID)
+		_ = client.DeleteSite(site.ID)
 	}
 }

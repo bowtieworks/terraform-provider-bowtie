@@ -68,7 +68,7 @@ func deleteGroupResources() {
 	// Pretty simple blanket statement to just remove everything.
 	groups, _ := client.GetGroups()
 	for id := range groups {
-		client.DeleteGroup(id)
+		_ = client.DeleteGroup(id)
 	}
 }
 

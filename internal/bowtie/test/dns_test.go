@@ -226,7 +226,7 @@ func deleteDNSResources() {
 	// Pretty simple blanket statement to just remove everything.
 	dnss, _ := client.GetDNS()
 	for id := range dnss {
-		client.DeleteDNS(id)
+		_ = client.DeleteDNS(id)
 	}
 }
 
