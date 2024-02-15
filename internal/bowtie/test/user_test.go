@@ -17,7 +17,7 @@ func init() {
 		Name: "user",
 		F: func(host string) error {
 			ctx := context.Background()
-			client, err := getBowtieClient(ctx, host)
+			client, err := getBowtieClient(host)
 			if err != nil {
 				return err
 			}

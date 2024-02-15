@@ -77,12 +77,10 @@ func getOrganizationConfig(resource string, name string, domain string) string {
 
 func getOrgId() resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
-		ctx := context.Background()
-
 		username := os.Getenv("BOWTIE_USERNAME")
 		password := os.Getenv("BOWTIE_PASSWORD")
 
-		client, err := client.NewClient(ctx, "http://localhost:3000", username, password, false)
+		client, err := client.NewClient("http://localhost:3000", username, password, false)
 
 		if err != nil {
 			return "", err

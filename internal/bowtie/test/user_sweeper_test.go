@@ -1,7 +1,6 @@
 package test
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -13,11 +12,11 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
-func getBowtieClient(ctx context.Context, host string) (*client.Client, error) {
+func getBowtieClient(host string) (*client.Client, error) {
 	username := os.Getenv("BOWTIE_USERNAME")
 	password := os.Getenv("BOWTIE_PASSWORD")
 
-	c, err := client.NewClient(ctx, host, username, password, false)
+	c, err := client.NewClient(host, username, password, false)
 	return c, err
 
 }
