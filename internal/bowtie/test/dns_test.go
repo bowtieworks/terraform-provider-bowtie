@@ -1,14 +1,12 @@
 package test
 
 import (
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"text/template"
 
-	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
@@ -212,59 +210,23 @@ func TestAccDNSResource(t *testing.T) {
 	})
 }
 
-// An acceptance test to confirm that the resource can be created,
-// then deleted out-of-band underneath the provider, then re-applied
-// and successfully recreate the resource without erroring out.
 func TestAccDNSResourceRecreation(t *testing.T) {
-	// Re-use this step later:
-	create := resource.TestStep{
-		Config: getDNSConfig("example.com", []string{"1.1.1.1"}, []string{}, nil),
-		ConfigPlanChecks: resource.ConfigPlanChecks{
-			PreApply: []plancheck.PlanCheck{
-				plancheck.ExpectResourceAction("bowtie_dns.test", plancheck.ResourceActionCreate),
-			},
-			PostApplyPostRefresh: []plancheck.PlanCheck{
-				plancheck.ExpectEmptyPlan(),
-			},
-		},
-		Check: resource.ComposeAggregateTestCheckFunc(
-			resource.TestCheckResourceAttr("bowtie_dns.test", "name", "example.com"),
-			resource.TestCheckResourceAttr("bowtie_dns.test", "servers.0.addr", "1.1.1.1"),
-			resource.TestCheckResourceAttrSet("bowtie_dns.test", "id"),
-			resource.TestCheckResourceAttrSet("bowtie_dns.test", "last_updated"),
-		),
-	}
-
-	recreate := create
-	recreate.PreConfig = deleteDNSResources
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// First, create the resource normally and confirm that no
-			// pending changes remain and that the resource is consistent:
-			create,
-			// Then re-run the same configuration after deleting the
-			// resource from underneath terrform:
-			recreate,
-		},
-	})
+	utils.RecreationTest(
+		t,
+		"bowtie_dns.test",
+		getDNSConfig("example.com", []string{"1.1.1.1"}, []string{}, nil),
+		deleteDNSResources,
+	)
 }
 
 // Delete all DNS resources from the API.
 func deleteDNSResources() {
-	username := os.Getenv("BOWTIE_USERNAME")
-	password := os.Getenv("BOWTIE_PASSWORD")
-
-	c, err := client.NewClient("http://127.0.0.1:3000", username, password, false)
-	if err != nil {
-		fmt.Println("Couldn't create Bowtie client")
-	}
+	client, _ := utils.NewEnvClient()
 
 	// Pretty simple blanket statement to just remove everything.
-	dnss, _ := c.GetDNS()
-	for id, _ := range dnss {
-		c.DeleteDNS(id)
+	dnss, _ := client.GetDNS()
+	for id := range dnss {
+		client.DeleteDNS(id)
 	}
 }
 

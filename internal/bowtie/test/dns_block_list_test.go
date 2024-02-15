@@ -6,11 +6,12 @@ import (
 	"text/template"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 const (
-	blresourceName = "bowtie_dns_block_list.test"
+	blResourceName = "bowtie_dns_block_list.test"
 
 	blName       = "Test DNS Block List"
 	blNameChange = "Different DNS Block List name"
@@ -27,19 +28,19 @@ func TestDNSBlockListResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Basic tests for upstream URLs
 			{
-				Config: getDNSBlockListConfig(blresourceName, blName, blUrl, blOverride),
+				Config: getDNSBlockListConfig(blResourceName, blName, blUrl, blOverride),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(blresourceName, "name", blName),
-					resource.TestCheckResourceAttr(blresourceName, "upstream", blUrl),
-					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.0", blOverride[0]),
-					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.1", blOverride[1]),
-					resource.TestCheckResourceAttrSet(blresourceName, "id"),
-					resource.TestCheckResourceAttrSet(blresourceName, "last_updated"),
+					resource.TestCheckResourceAttr(blResourceName, "name", blName),
+					resource.TestCheckResourceAttr(blResourceName, "upstream", blUrl),
+					resource.TestCheckResourceAttr(blResourceName, "override_to_allow.0", blOverride[0]),
+					resource.TestCheckResourceAttr(blResourceName, "override_to_allow.1", blOverride[1]),
+					resource.TestCheckResourceAttrSet(blResourceName, "id"),
+					resource.TestCheckResourceAttrSet(blResourceName, "last_updated"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName:      blresourceName,
+				ResourceName:      blResourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				// The last_updated attribute does not exist in the HashiCups
@@ -48,19 +49,39 @@ func TestDNSBlockListResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: getDNSBlockListConfig(blresourceName, blNameChange, blUrlChange, blOverrideChange),
+				Config: getDNSBlockListConfig(blResourceName, blNameChange, blUrlChange, blOverrideChange),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(blresourceName, "name", blNameChange),
-					resource.TestCheckResourceAttr(blresourceName, "upstream", blUrlChange),
-					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.0", blOverrideChange[0]),
-					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.1", blOverrideChange[1]),
-					resource.TestCheckResourceAttr(blresourceName, "override_to_allow.2", blOverrideChange[2]),
-					resource.TestCheckResourceAttrSet(blresourceName, "id"),
-					resource.TestCheckResourceAttrSet(blresourceName, "last_updated"),
+					resource.TestCheckResourceAttr(blResourceName, "name", blNameChange),
+					resource.TestCheckResourceAttr(blResourceName, "upstream", blUrlChange),
+					resource.TestCheckResourceAttr(blResourceName, "override_to_allow.0", blOverrideChange[0]),
+					resource.TestCheckResourceAttr(blResourceName, "override_to_allow.1", blOverrideChange[1]),
+					resource.TestCheckResourceAttr(blResourceName, "override_to_allow.2", blOverrideChange[2]),
+					resource.TestCheckResourceAttrSet(blResourceName, "id"),
+					resource.TestCheckResourceAttrSet(blResourceName, "last_updated"),
 				),
 			},
 		},
 	})
+}
+
+func TestAccDNSBlockListResourceRecreation(t *testing.T) {
+	utils.RecreationTest(
+		t,
+		blResourceName,
+		getDNSBlockListConfig(blResourceName, blName, blUrl, blOverride),
+		deleteDNSBlockListResources,
+	)
+}
+
+// Delete all DNS blocklist resources from the API.
+func deleteDNSBlockListResources() {
+	client, _ := utils.NewEnvClient()
+
+	// Pretty simple blanket statement to just remove everything.
+	blocklists, _ := client.GetDNSBlockLists()
+	for id := range blocklists {
+		client.DeleteDNSBlockList(id)
+	}
 }
 
 func getDNSBlockListConfig(resource string, name string, url string, overrides []string) string {

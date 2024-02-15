@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
@@ -57,6 +58,32 @@ func TestAccSiteRangeResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccSiteRangeRecreation(t *testing.T) {
+	utils.RecreationTest(
+		t,
+		"bowtie_site_range.test",
+		getSiteRangeConfig("Test Site", "Office", "Office network CIDR", "10.0.0.0/16", 1, 255),
+		deleteSiteRangeResources,
+	)
+}
+
+// Delete all site range resources from the API.
+func deleteSiteRangeResources() {
+	client, _ := utils.NewEnvClient()
+
+	// Pretty simple blanket statement to just remove everything.
+	sites, _ := client.GetSites()
+
+	for _, site := range sites {
+		for _, siteRange := range site.RoutableRangesV4 {
+			client.DeleteSiteRange(site.ID, siteRange.ID)
+		}
+		for _, siteRange := range site.RouteRangesV6 {
+			client.DeleteSiteRange(site.ID, siteRange.ID)
+		}
+	}
 }
 
 func getSiteRangeConfig(siteName, rangeName, rangeDescription, rangeCIDR string, weight, metric int) string {

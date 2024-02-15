@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -49,6 +50,26 @@ func TestGroupResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccGroupRecreation(t *testing.T) {
+	utils.RecreationTest(
+		t,
+		groupResourceName,
+		getGroupConfig(groupResourceName, groupName),
+		deleteGroupResources,
+	)
+}
+
+// Delete all group resources from the API.
+func deleteGroupResources() {
+	client, _ := utils.NewEnvClient()
+
+	// Pretty simple blanket statement to just remove everything.
+	groups, _ := client.GetGroups()
+	for id := range groups {
+		client.DeleteGroup(id)
+	}
 }
 
 func getGroupConfig(resource string, name string) string {

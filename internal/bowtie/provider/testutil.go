@@ -9,9 +9,7 @@ const (
 	// It’s assumed that authentication is provided via the
 	// BOWTIE_USERNAME and BOWTIE_PASSWORD environment variables.
 	ProviderConfig = `
-provider "bowtie" {
-  host = "http://127.0.0.1:3000"
-}
+provider "bowtie" { }
 `
 )
 
