@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -26,7 +25,7 @@ type AuthPayload struct {
 
 const apiVersionPrefix = "/-net/api/v0"
 
-func NewClient(ctx context.Context, host, username, password string, lazy_auth bool) (*Client, error) {
+func NewClient(host, username, password string, lazy_auth bool) (*Client, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err

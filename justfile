@@ -61,6 +61,21 @@ site-id:
 		echo "SITE_ID=$(uuidgen)" >> $conf
 	fi
 
+# Ensure that the BOWTIE_HOST env var is set
+bowtie-host:
+	#!/usr/bin/env bash
+
+	conf={{envvars}}
+	var=BOWTIE_HOST
+	if grep $var $conf &>/dev/null
+	then
+		echo "$var present in $conf"
+	else
+		port=$(yq -r '.services.bowtie.ports[0] | split(":")[0]' < compose.yaml)
+		set -x
+		echo "$var=http://127.0.0.1:$port" >> $conf
+	fi
+
 # Generate an init-users file for bootstrapping
 init-users:
 	#!/usr/bin/env bash
@@ -91,7 +106,7 @@ image-var:
 		yq -i -Y --arg image "${image}" '.services.bowtie.image = $image' compose.yaml
 
 # Start a background container for bowtie-server
-container cmd=container_cmd: site-id init-users image-var
+container cmd=container_cmd: site-id init-users image-var bowtie-host
 	{{cmd}} up --detach
 
 # Stop the background container

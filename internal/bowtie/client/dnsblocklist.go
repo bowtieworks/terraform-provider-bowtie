@@ -5,14 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/google/uuid"
 )
-
-func (c *Client) CreateDNSBlockList(name string, upstream string, override_to_allow string) (string, error) {
-	id := uuid.NewString()
-	return id, c.UpsertDNSBlockList(id, name, upstream, override_to_allow)
-}
 
 func (c *Client) UpsertDNSBlockList(id string, name string, upstream string, override_to_allow string) error {
 	var payload DNSBlockList = DNSBlockList{
@@ -60,19 +53,4 @@ func (c *Client) GetDNSBlockLists() (map[string]DNSBlockList, error) {
 	var dnsblocklists map[string]DNSBlockList = map[string]DNSBlockList{}
 	err = json.Unmarshal(responseBody, &dnsblocklists)
 	return dnsblocklists, err
-}
-
-func (c *Client) GetDNSBlockList(id string) (*DNSBlockList, error) {
-	blocklists, err := c.GetDNSBlockLists()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, blocklist := range blocklists {
-		if blocklist.ID == id {
-			return &blocklist, nil
-		}
-	}
-
-	return nil, fmt.Errorf("block list not found: %s", id)
 }

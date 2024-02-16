@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
@@ -15,9 +16,9 @@ import (
 func init() {
 	resource.AddTestSweepers("user", &resource.Sweeper{
 		Name: "user",
-		F: func(host string) error {
+		F: func(_ string) error {
 			ctx := context.Background()
-			client, err := getBowtieClient(ctx, host)
+			client, err := utils.NewEnvClient()
 			if err != nil {
 				return err
 			}
@@ -33,7 +34,7 @@ func init() {
 				}
 
 				if user.Role == "Owner" {
-					_, err := client.UpsertUser(ctx, user.ID, "", "", "User", false, false, false, false, false)
+					_, err := client.UpsertUser(user.ID, "", "", "User", false, false, false, false, false)
 					if err != nil {
 						fmt.Println("[Error] Failed to demote user")
 						continue

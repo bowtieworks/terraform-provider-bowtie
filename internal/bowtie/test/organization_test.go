@@ -1,14 +1,12 @@
 package test
 
 import (
-	"context"
-	"os"
 	"strings"
 	"testing"
 	"text/template"
 
-	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -77,12 +75,7 @@ func getOrganizationConfig(resource string, name string, domain string) string {
 
 func getOrgId() resource.ImportStateIdFunc {
 	return func(state *terraform.State) (string, error) {
-		ctx := context.Background()
-
-		username := os.Getenv("BOWTIE_USERNAME")
-		password := os.Getenv("BOWTIE_PASSWORD")
-
-		client, err := client.NewClient(ctx, "http://localhost:3000", username, password, false)
+		client, err := utils.NewEnvClient()
 
 		if err != nil {
 			return "", err

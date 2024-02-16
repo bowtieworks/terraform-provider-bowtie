@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -152,7 +153,22 @@ func (sr *siteRangeResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	id, err := sr.client.CreateSiteRange(plan.SiteID.ValueString(), plan.Name.ValueString(), plan.Description.ValueString(), cidr, is_ipv4, is_ipv6, plan.Weight.ValueInt64(), plan.Metric.ValueInt64())
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	err := sr.client.UpsertSiteRange(
+		plan.SiteID.ValueString(),
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		plan.Description.ValueString(),
+		cidr,
+		is_ipv4,
+		is_ipv6,
+		plan.Weight.ValueInt64(),
+		plan.Metric.ValueInt64(),
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to create the site range",
@@ -161,7 +177,6 @@ func (sr *siteRangeResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.ID = types.StringValue(id)
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -174,12 +189,31 @@ func (sr *siteRangeResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	info, err := sr.client.GetSiteRange(state.SiteID.ValueString(), state.ID.ValueString())
+	sites, err := sr.client.GetSites()
 	if err != nil {
-		/*resp.Diagnostics.AddError(
-			"Failed to retrieve site range info from the bowtie server",
-			"Unexpected error reading from the bowtie server error: "+err.Error(),
-		)*/
+		resp.Diagnostics.AddError(
+			"Failed retrieving site information from bowtie",
+			"Unexpected error retrieving site info from bowtie server: "+err.Error(),
+		)
+		return
+	}
+
+	site, err := client.FindSite(state.SiteID.ValueString(), sites)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed retrieving site range from bowtie",
+			"Unexpected error retrieving site range info from bowtie server: "+err.Error(),
+		)
+		return
+	}
+
+	info, err := sr.client.FindSiteRange(site, state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
 		resp.State.RemoveResource(ctx)
 		return
 	}

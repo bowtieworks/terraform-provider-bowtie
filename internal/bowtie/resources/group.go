@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -83,7 +84,11 @@ func (g *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	id, err := g.client.CreateGroup(plan.Name.ValueString())
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	_, err := g.client.UpsertGroup(plan.ID.ValueString(), plan.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating group",
@@ -91,7 +96,6 @@ func (g *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 		)
 	}
 
-	plan.ID = types.StringValue(id)
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -107,12 +111,23 @@ func (g *groupResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	group, err := g.client.GetGroup(state.ID.ValueString())
+	groups, err := g.client.GetGroups()
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving the group",
 			fmt.Sprintf("Unexpected error retrieving group: %s - %+v", state.ID.ValueString(), err),
 		)
+		return
+	}
+
+	group, present := groups[state.ID.ValueString()]
+	if !present {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

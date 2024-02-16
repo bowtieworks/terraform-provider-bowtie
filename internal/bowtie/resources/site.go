@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -85,7 +86,11 @@ func (s *siteResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	id, err := s.client.CreateSite(plan.Name.ValueString())
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	err := s.client.CreateSite(plan.ID.ValueString(), plan.Name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed creating site",
@@ -94,7 +99,6 @@ func (s *siteResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.ID = types.StringValue(id)
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -107,18 +111,27 @@ func (s *siteResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	site, err := s.client.GetSite(state.ID.ValueString())
+	sites, err := s.client.GetSites()
 	if err != nil {
-		/*resp.Diagnostics.AddError(
+		resp.Diagnostics.AddError(
 			"Failed retrieving site information from bowtie",
 			"Unexpected error retrieving site info from bowtie server: "+err.Error(),
-		)*/
+		)
+		return
+	}
+
+	site, err := client.FindSite(state.ID.ValueString(), sites)
+	if err != nil {
+		resp.Diagnostics.AddAttributeWarning(
+			path.Root("id"),
+			"resource not found, removing from state",
+			state.ID.ValueString(),
+		)
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	state.Name = types.StringValue(site.Name)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 

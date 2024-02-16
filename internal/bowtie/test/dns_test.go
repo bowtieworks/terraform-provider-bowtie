@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/provider"
+	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/utils"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
@@ -207,6 +208,26 @@ func TestAccDNSResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccDNSResourceRecreation(t *testing.T) {
+	utils.RecreationTest(
+		t,
+		"bowtie_dns.test",
+		getDNSConfig("example.com", []string{"1.1.1.1"}, []string{}, nil),
+		deleteDNSResources,
+	)
+}
+
+// Delete all DNS resources from the API.
+func deleteDNSResources() {
+	client, _ := utils.NewEnvClient()
+
+	// Pretty simple blanket statement to just remove everything.
+	dnss, _ := client.GetDNS()
+	for id := range dnss {
+		_ = client.DeleteDNS(id)
+	}
 }
 
 func getDNSConfig(name string, servers, excludes, sites []string) string {

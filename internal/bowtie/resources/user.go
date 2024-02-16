@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bowtieworks/terraform-provider-bowtie/internal/bowtie/client"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -142,7 +143,22 @@ func (u *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	id, err := u.client.CreateUser(ctx, plan.Name.ValueString(), plan.Email.ValueString(), plan.Role.ValueString(), plan.AuthzPolicies.ValueBool(), plan.AuthzUsers.ValueBool(), plan.AuthzControlPlane.ValueBool(), plan.AuthzDevices.ValueBool(), plan.Enabled.ValueBool())
+	if plan.ID.ValueString() == "" {
+		plan.ID = types.StringValue(uuid.NewString())
+	}
+
+	_, err := u.client.UpsertUser(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		plan.Email.ValueString(),
+		plan.Role.ValueString(),
+		plan.AuthzPolicies.ValueBool(),
+		plan.AuthzUsers.ValueBool(),
+		plan.AuthzControlPlane.ValueBool(),
+		plan.AuthzDevices.ValueBool(),
+		plan.Enabled.ValueBool(),
+	)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed creating user",
@@ -150,8 +166,6 @@ func (u *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		)
 		return
 	}
-
-	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -163,7 +177,7 @@ func (u *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	user, err := u.client.GetUser(ctx, state.ID.ValueString())
+	user, err := u.client.GetUser(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed reading the user: "+state.ID.ValueString(),
@@ -192,7 +206,17 @@ func (u *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	_, err := u.client.UpsertUser(ctx, plan.ID.ValueString(), plan.Name.ValueString(), plan.Email.ValueString(), plan.Role.ValueString(), plan.AuthzPolicies.ValueBool(), plan.AuthzUsers.ValueBool(), plan.AuthzControlPlane.ValueBool(), plan.AuthzDevices.ValueBool(), plan.Enabled.ValueBool())
+	_, err := u.client.UpsertUser(
+		plan.ID.ValueString(),
+		plan.Name.ValueString(),
+		plan.Email.ValueString(),
+		plan.Role.ValueString(),
+		plan.AuthzPolicies.ValueBool(),
+		plan.AuthzUsers.ValueBool(),
+		plan.AuthzControlPlane.ValueBool(),
+		plan.AuthzDevices.ValueBool(),
+		plan.Enabled.ValueBool(),
+	)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to update the user: "+plan.ID.ValueString(),
