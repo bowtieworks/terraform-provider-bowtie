@@ -12,6 +12,10 @@ on:
     paths-ignore:
       - 'README.md'
 
+  # Run the test suite at the start (~9:00AM MDT) of every weekday (Mon-Fri)
+  schedule:
+    - cron: "0 16 * * 1-5"
+
 jobs:
 
   docs-sync:
