@@ -11,7 +11,8 @@ import (
 )
 
 type Client struct {
-	HTTPClient *http.Client
+	HTTPClient       *http.Client
+	Tagged_locations bool
 
 	hostURL   string
 	auth      AuthPayload
@@ -25,7 +26,7 @@ type AuthPayload struct {
 
 const apiVersionPrefix = "/-net/api/v0"
 
-func NewClient(host, username, password string, lazy_auth bool) (*Client, error) {
+func NewClient(host, username, password string, lazy_auth bool, tagged_locations bool) (*Client, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err
@@ -38,7 +39,8 @@ func NewClient(host, username, password string, lazy_auth bool) (*Client, error)
 				return http.ErrUseLastResponse
 			},
 		},
-		hostURL: host,
+		Tagged_locations: tagged_locations,
+		hostURL:          host,
 		auth: AuthPayload{
 			Username: username,
 			Password: password,

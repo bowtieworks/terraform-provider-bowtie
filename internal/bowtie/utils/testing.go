@@ -15,7 +15,7 @@ func NewEnvClient() (*client.Client, error) {
 	username := os.Getenv("BOWTIE_USERNAME")
 	password := os.Getenv("BOWTIE_PASSWORD")
 
-	c, err := client.NewClient(host, username, password, false)
+	c, err := client.NewClient(host, username, password, false, true)
 	return c, err
 }
 

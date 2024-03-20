@@ -175,13 +175,45 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		plan.ID = types.StringValue(uuid.NewString())
 	}
 
+	var location client.BowtieResourceLocation
+	if r.client.Tagged_locations {
+		var locationType string
+		var locationValue string
+		if !plan.Location.CIDR.IsNull() {
+			locationType = "cidr"
+			locationValue = plan.Location.CIDR.ValueString()
+		} else if !plan.Location.IP.IsNull() {
+			locationType = "ip"
+			locationValue = plan.Location.IP.ValueString()
+		} else if !plan.Location.DNS.IsNull() {
+			locationType = "dns"
+			locationValue = plan.Location.DNS.ValueString()
+		}
+		location.Tagged = &client.BowtieResourceLocationTagged{
+			Type:  locationType,
+			Value: locationValue,
+		}
+	} else {
+		var ip, cidr, dns string
+		if !plan.Location.CIDR.IsNull() {
+			cidr = plan.Location.CIDR.ValueString()
+		} else if !plan.Location.IP.IsNull() {
+			ip = plan.Location.IP.ValueString()
+		} else if !plan.Location.DNS.IsNull() {
+			dns = plan.Location.DNS.ValueString()
+		}
+		location.Untagged = &client.BowtieResourceLocationUntagged{
+			IP:   ip,
+			CIDR: cidr,
+			DNS:  dns,
+		}
+	}
+
 	_, err := r.client.UpsertResource(
 		plan.ID.ValueString(),
 		plan.Name.ValueString(),
 		plan.Protocol.ValueString(),
-		plan.Location.IP.ValueString(),
-		plan.Location.CIDR.ValueString(),
-		plan.Location.DNS.ValueString(),
+		location,
 		portsRange,
 		portsCollection,
 	)
@@ -228,25 +260,48 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 	state.Protocol = types.StringValue(resource.Protocol)
 	state.Location = &resourceLocationModel{}
 
-	if resource.Location.CIDR != "" {
-		state.Location.CIDR = types.StringValue(resource.Location.CIDR)
-		state.Location.DNS = types.StringNull()
-		state.Location.IP = types.StringNull()
-	} else if resource.Location.IP != "" {
-		state.Location.IP = types.StringValue(resource.Location.IP)
-		state.Location.DNS = types.StringNull()
-		state.Location.CIDR = types.StringNull()
-	} else if resource.Location.DNS != "" {
-		state.Location.DNS = types.StringValue(resource.Location.DNS)
-		state.Location.IP = types.StringNull()
-		state.Location.CIDR = types.StringNull()
+	if resource.Location.Tagged != nil {
+		switch resource.Location.Tagged.Type {
+		case "cidr":
+			{
+				state.Location.CIDR = types.StringValue(resource.Location.Tagged.Value)
+				state.Location.DNS = types.StringNull()
+				state.Location.IP = types.StringNull()
+			}
+		case "ip":
+			{
+				state.Location.CIDR = types.StringNull()
+				state.Location.DNS = types.StringNull()
+				state.Location.IP = types.StringValue(resource.Location.Tagged.Value)
+			}
+		case "dns":
+			{
+				state.Location.CIDR = types.StringNull()
+				state.Location.DNS = types.StringValue(resource.Location.Tagged.Value)
+				state.Location.IP = types.StringNull()
+			}
+		}
 	} else {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("location"),
-			"Invalid resource returned from bowtie api",
-			"Unexpected location key. either wasn't set or an unexpected key was found",
-		)
-		return
+		if resource.Location.Untagged.CIDR != "" {
+			state.Location.CIDR = types.StringValue(resource.Location.Untagged.CIDR)
+			state.Location.DNS = types.StringNull()
+			state.Location.IP = types.StringNull()
+		} else if resource.Location.Untagged.IP != "" {
+			state.Location.IP = types.StringValue(resource.Location.Untagged.IP)
+			state.Location.DNS = types.StringNull()
+			state.Location.CIDR = types.StringNull()
+		} else if resource.Location.Untagged.DNS != "" {
+			state.Location.DNS = types.StringValue(resource.Location.Untagged.DNS)
+			state.Location.IP = types.StringNull()
+			state.Location.CIDR = types.StringNull()
+		} else {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("location"),
+				"Invalid resource returned from bowtie api",
+				"Unexpected location key. either wasn't set or an unexpected key was found",
+			)
+			return
+		}
 	}
 
 	state.Ports = &resourcePortsModel{}
@@ -302,13 +357,45 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	var location client.BowtieResourceLocation
+	if r.client.Tagged_locations {
+		var locationType string
+		var locationValue string
+		if !plan.Location.CIDR.IsNull() {
+			locationType = "cidr"
+			locationValue = plan.Location.CIDR.ValueString()
+		} else if !plan.Location.IP.IsNull() {
+			locationType = "ip"
+			locationValue = plan.Location.IP.ValueString()
+		} else if !plan.Location.DNS.IsNull() {
+			locationType = "dns"
+			locationValue = plan.Location.DNS.ValueString()
+		}
+		location.Tagged = &client.BowtieResourceLocationTagged{
+			Type:  locationType,
+			Value: locationValue,
+		}
+	} else {
+		var ip, cidr, dns string
+		if !plan.Location.CIDR.IsNull() {
+			cidr = plan.Location.CIDR.ValueString()
+		} else if !plan.Location.IP.IsNull() {
+			ip = plan.Location.IP.ValueString()
+		} else if !plan.Location.DNS.IsNull() {
+			dns = plan.Location.DNS.ValueString()
+		}
+		location.Untagged = &client.BowtieResourceLocationUntagged{
+			IP:   ip,
+			CIDR: cidr,
+			DNS:  dns,
+		}
+	}
+
 	_, err := r.client.UpsertResource(
 		plan.ID.ValueString(),
 		plan.Name.ValueString(),
 		plan.Protocol.ValueString(),
-		plan.Location.IP.ValueString(),
-		plan.Location.CIDR.ValueString(),
-		plan.Location.DNS.ValueString(),
+		location,
 		portsRange,
 		portsCollection,
 	)
