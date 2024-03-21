@@ -22,6 +22,7 @@ type bowtieProviderModel struct {
 	Username           types.String `tfsdk:"username"`
 	Password           types.String `tfsdk:"password"`
 	LazyAuthentication types.Bool   `tfsdk:"lazy_authentication"`
+	TaggedLocations    types.Bool   `tfsdk:"tagged_locations"`
 }
 
 func New() provider.Provider {
@@ -54,6 +55,10 @@ For more documentation about installing and configuring Bowtie, refer to the off
 				Description: "By default, the provider will authenticate to the Bowtie API just in time (or lazily) which permits use cases like creating Controllers in Terraform before using their API endpoints. Set this variable to `false` if you instead want to authenticate at the time the provider is configured - for example, to catch authentication errors up-front before starting an `apply` or `plan`.",
 				Optional:    true,
 			},
+			"tagged_locations": schema.BoolAttribute{
+				Description: "Control whether the provider will send policy resource locations using the new tagged type format or legacy format.",
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -73,6 +78,7 @@ func (b *BowtieProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	lazy_auth := true
+	tagged_locations := true
 
 	if config.Host.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
@@ -146,11 +152,15 @@ func (b *BowtieProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		lazy_auth = config.LazyAuthentication.ValueBool()
 	}
 
+	if !config.TaggedLocations.IsNull() {
+		tagged_locations = config.TaggedLocations.ValueBool()
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	client, err := client.NewClient(host, username, password, lazy_auth)
+	client, err := client.NewClient(host, username, password, lazy_auth, tagged_locations)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to create Bowtie API Client",

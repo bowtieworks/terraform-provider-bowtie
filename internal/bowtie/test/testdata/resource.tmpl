@@ -1,0 +1,22 @@
+{{ .provider }}
+resource "bowtie_resource" "test" {
+  name = "{{ .name }}"
+
+  protocol = "{{ .protocol }}"
+
+  {{- range $kind, $location := .locations }}
+  location = {
+    {{ $kind }} = "{{ $location }}"
+  }
+  {{ end -}}
+
+  {{- range $kind, $ports := .ports }}
+  ports = {
+    {{ $kind }} = [
+      {{- range $port := $ports }}
+      {{ $port -}},
+      {{ end -}}
+    ]
+  }
+  {{ end -}}
+}

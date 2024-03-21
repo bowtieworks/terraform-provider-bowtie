@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -40,10 +41,50 @@ type BowtieResource struct {
 	Ports    BowtieResourcePorts    `json:"ports"`
 }
 
+// TODO: This can be collapsed down into the tagged-only variant once
+// the old style API is sunset.
 type BowtieResourceLocation struct {
+	Untagged *BowtieResourceLocationUntagged
+	Tagged   *BowtieResourceLocationTagged
+}
+
+func (rl *BowtieResourceLocation) UnmarshalJSON(data []byte) error {
+	// First, try unmarshaling into BowtieResourceLocationTagged
+	//
+	// Unmarshal ordering is important here since the untagged version
+	// has all-optional fields.
+	if err := json.Unmarshal(data, &rl.Tagged); err == nil {
+		return nil
+	}
+
+	// Then, try unmarshaling into BowtieResourceLocationUntagged
+	if err := json.Unmarshal(data, &rl.Untagged); err == nil {
+		return nil
+	}
+
+	// If neither unmarshaling works, return an error
+	return errors.New("failed to unmarshal API response for location")
+}
+
+func (rl BowtieResourceLocation) MarshalJSON() ([]byte, error) {
+	// Determine which version to marshal based on which field is non-nil
+	if rl.Untagged != nil {
+		return json.Marshal(rl.Untagged)
+	} else if rl.Tagged != nil {
+		return json.Marshal(rl.Tagged)
+	}
+	return nil, errors.New("no data to marshal")
+}
+
+type BowtieResourceLocationUntagged struct {
 	IP   string `json:"ip,omitempty"`
 	CIDR string `json:"cidr,omitempty"`
 	DNS  string `json:"dns,omitempty"`
+}
+
+type BowtieResourceLocationTagged struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
 type BowtieResourcePorts struct {
@@ -55,17 +96,13 @@ type BowtieResourcePortCollection struct {
 	Ports []int64 `json:"ports,omitempty"`
 }
 
-func (c *Client) UpsertResource(id, name, protocol, ip, cidr, dns string, portRange, portCollection []int64) (BowtieResource, error) {
+func (c *Client) UpsertResource(id, name, protocol string, location BowtieResourceLocation, portRange, portCollection []int64) (BowtieResource, error) {
 	payload := BowtieResource{
 		ID:       id,
 		Name:     name,
 		Protocol: protocol,
-		Location: BowtieResourceLocation{
-			IP:   ip,
-			CIDR: cidr,
-			DNS:  dns,
-		},
-		Ports: BowtieResourcePorts{},
+		Location: location,
+		Ports:    BowtieResourcePorts{},
 	}
 
 	if len(portRange) > 0 {

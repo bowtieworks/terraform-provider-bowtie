@@ -67,4 +67,5 @@ provider "bowtie" {
 - `host` (String) The Bowtie HTTP Controller endpoint. Honors the `BOWTIE_HOST` environment variable if set. Example: `https://bowtie.example.com`
 - `lazy_authentication` (Boolean) By default, the provider will authenticate to the Bowtie API just in time (or lazily) which permits use cases like creating Controllers in Terraform before using their API endpoints. Set this variable to `false` if you instead want to authenticate at the time the provider is configured - for example, to catch authentication errors up-front before starting an `apply` or `plan`.
 - `password` (String, Sensitive) Administrator password login credentials. Honors the `BOWTIE_PASSWORD` environment variable if set
+- `tagged_locations` (Boolean) Control whether the provider will send policy resource locations using the new tagged type format or legacy format.
 - `username` (String) Administrator username/email login credentials. Honors the `BOWTIE_USERNAME` environment variable if set
