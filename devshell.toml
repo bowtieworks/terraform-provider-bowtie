@@ -17,9 +17,6 @@ package = "gopls"
 package = "go-outline"
 
 [[commands]]
-package = "gocode"
-
-[[commands]]
 package = "gopkgs"
 
 [[commands]]
