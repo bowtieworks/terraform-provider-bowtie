@@ -78,7 +78,7 @@ Names may be given as upstream URLs which will be retrieved periodically.
 				},
 			},
 			"last_updated": schema.StringAttribute{
-				MarkdownDescription: "The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather additional provider metadata.",
+				MarkdownDescription: "The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather extra provider metadata.",
 				Computed:            true,
 			},
 			"name": schema.StringAttribute{

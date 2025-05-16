@@ -1,3 +1,0 @@
-Bowtie
-datacenter
-declaratively

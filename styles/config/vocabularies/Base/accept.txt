@@ -1,0 +1,6 @@
+[Bb]owtie
+URL
+bowtie_[a-z_]+
+datacenter
+declaratively
+lazily

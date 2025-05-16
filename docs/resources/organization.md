@@ -5,9 +5,9 @@ subcategory: ""
 description: |-
   Manage organization information.
   Note: Organizations are always represented in the Bowtie API and cannot be created or destroyed.
-  This resource will fail with an error if any Terraform actions attempt to delete or create organizations.
-  Instead, you should use an import https://developer.hashicorp.com/terraform/language/import block (or terraform import ... command) to import the already-existing organization which you can then configure normally.
-  If you need to remove an organization from your Terraform state, you may remove it with the terraform state rm ...command.
+  This resource will fail with an error if any Terraform actions try to delete or create organizations.
+  Instead, you should use an import https://developer.hashicorp.com/terraform/language/import block (or terraform import <target> command) to import the already-existing organization which you can then configure normally.
+  If you need to remove an organization from your Terraform state, you may remove it with the terraform state rm <target> command.
 ---
 
 # bowtie_organization (Resource)
@@ -15,9 +15,9 @@ description: |-
 Manage organization information.
 
 **Note**: Organizations are always represented in the Bowtie API and cannot be created or destroyed.
-This resource will **fail** with an error if any Terraform actions attempt to delete or create organizations.
-Instead, you should use an [import](https://developer.hashicorp.com/terraform/language/import) block (or `terraform import ...` command) to import the already-existing organization which you can then configure normally.
-If you need to remove an organization from your Terraform state, you may remove it with the `terraform state rm ...`command.
+This resource will **fail** with an error if any Terraform actions try to delete or create organizations.
+Instead, you should use an [import](https://developer.hashicorp.com/terraform/language/import) block (or `terraform import <target>` command) to import the already-existing organization which you can then configure normally.
+If you need to remove an organization from your Terraform state, you may remove it with the `terraform state rm <target>` command.
 
 
 
@@ -32,4 +32,4 @@ If you need to remove an organization from your Terraform state, you may remove 
 ### Read-Only
 
 - `id` (String) Internal resource ID.
-- `last_updated` (String) The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather additional provider metadata.
+- `last_updated` (String) The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather extra provider metadata.

@@ -42,7 +42,7 @@ resource "bowtie_dns_block_list" "example" {
 ### Read-Only
 
 - `id` (String) Internal resource ID.
-- `last_updated` (String) The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather additional provider metadata.
+- `last_updated` (String) The last time this object was change by Terraform. This field is _not part of the Bowtie API_ but rather extra provider metadata.
 
 ## Import
 
