@@ -18,6 +18,14 @@
         _module.args.pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
+	  overlays = [
+	    (final: prev: {
+	      devshellPython = prev.python3.withPackages (p: [
+		p.requests
+		p.pyyaml
+	      ]);
+	    })
+	  ];
         };
 
         devshells.default = {

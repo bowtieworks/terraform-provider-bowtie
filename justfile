@@ -3,6 +3,10 @@ envvars := "config.env"
 set dotenv-filename := "config.env"
 
 container_cmd := env_var_or_default("COMPOSE_CMD", "docker-compose")
+# This is the production bowtienet/registry bowtie-server image.
+#
+# To use the staging/release candidate image, use 5633314 instead.
+container_registry_id := env_var_or_default("REGISTRY_ID", "5654678")
 
 # Print usage
 help:
@@ -98,12 +102,44 @@ init-users:
 	echo "Generated user $username"
 
 # Pull the latest image tag and set it as an environment variable
-image-var:
-	#!/usr/bin/env bash
+image-var registry=container_registry_id:
+    #!/usr/bin/env python3
 
-		image=$(curl --silent https://gitlab.com/api/v4/projects/bowtienet%2Fregistry/registry/repositories/5654678/tags | jq -r 'last | .location')
-		echo "Setting image to ${image}"
-		yq -i -Y --arg image "${image}" '.services.bowtie.image = $image' compose.yaml
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime
+    from pathlib import Path
+    from pprint import pprint
+
+    import requests
+    import yaml
+
+    page = 1
+    url = "https://gitlab.com/api/v4/projects/bowtienet%2Fregistry/registry/repositories/{{registry}}/tags"
+    tags = []
+
+    while page:
+        response = requests.get(url, params={"page": page})
+        tags.extend(response.json())
+        page = response.headers.get("x-next-page")
+
+    with ThreadPoolExecutor() as executor:
+        all_tags = executor.map(
+            lambda t: requests.get(f"{url}/{t['name']}").json(),
+            tags
+        )
+
+    latest = sorted(
+        all_tags,
+        key=lambda t: datetime.fromisoformat(t['created_at'])
+    )[-1]
+
+    print(f"Setting image to {latest['location']}")
+    compose = Path("compose.yaml")
+    with compose.open('r') as handle:
+        y = yaml.load(handle, Loader=yaml.CLoader)
+    y['services']['bowtie']['image'] = latest['location']
+    with compose.open('w') as handle:
+        yaml.dump(y, handle, Dumper=yaml.CDumper)
 
 # Start a background container for bowtie-server
 container cmd=container_cmd: site-id init-users image-var bowtie-host

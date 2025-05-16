@@ -48,3 +48,6 @@ package = "vale"
 
 [[commands]]
 package = "docker-compose"
+
+[[commands]]
+package = "devshellPython"
