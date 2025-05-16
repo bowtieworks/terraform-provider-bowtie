@@ -45,6 +45,18 @@ jobs:
     - uses: ./.github/actions/bootstrap
     - run: nix develop . --command just acceptance-test
 
+  acceptance-beta:
+    name: Acceptance tests against release candidate builds
+    continue-on-error: true
+    env:
+      REGISTRY_ID: 5633314
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/bootstrap
+    - run: nix develop . --command just acceptance-test
+
   lint:
     name: Perform go linting checks
     runs-on: ubuntu-latest
