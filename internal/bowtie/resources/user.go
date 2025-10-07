@@ -162,7 +162,7 @@ func (u *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed creating user",
-			"Unexpected error craeting the user: "+err.Error(),
+			"Unexpected error creating the user: "+err.Error(),
 		)
 		return
 	}

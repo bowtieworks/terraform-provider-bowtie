@@ -43,7 +43,7 @@ func init() {
 
 				err = client.DisableUser(ctx, user.ID)
 				if err != nil {
-					fmt.Println("[Error] failed to disble user")
+					fmt.Println("[Error] failed to disable user")
 					continue
 				}
 
