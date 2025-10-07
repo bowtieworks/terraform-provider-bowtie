@@ -183,6 +183,7 @@ func (u *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			"Failed reading the user: "+state.ID.ValueString(),
 			"Unexpected error reading the user: "+err.Error(),
 		)
+		return
 	}
 
 	state.Name = types.StringValue(user.Name)
