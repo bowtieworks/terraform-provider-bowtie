@@ -55,7 +55,7 @@ func (c *Client) GetUserByEmail(ctx context.Context, email string) (BowtieUser, 
 func (c *Client) GetUser(id string) (BowtieUser, error) {
 	req, err := http.NewRequest(http.MethodGet, c.getHostURL(fmt.Sprintf("/user/%s", id)), nil)
 	if err != nil {
-		return BowtieUser{}, nil
+		return BowtieUser{}, err
 	}
 
 	body, err := c.doRequest(req)

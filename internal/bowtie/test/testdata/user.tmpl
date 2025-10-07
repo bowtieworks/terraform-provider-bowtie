@@ -2,6 +2,7 @@
 resource "bowtie_user" "user" {
   name = "{{ .name }}"
   email = "{{ .email }}"
+  enabled = "{{ .enabled }}"
 
 {{ if ne .role "" }}
   role = "{{.role}}"

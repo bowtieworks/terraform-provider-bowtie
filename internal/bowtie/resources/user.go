@@ -162,7 +162,7 @@ func (u *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed creating user",
-			"Unexpected error craeting the user: "+err.Error(),
+			"Unexpected error creating the user: "+err.Error(),
 		)
 		return
 	}
@@ -183,6 +183,7 @@ func (u *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			"Failed reading the user: "+state.ID.ValueString(),
 			"Unexpected error reading the user: "+err.Error(),
 		)
+		return
 	}
 
 	state.Name = types.StringValue(user.Name)

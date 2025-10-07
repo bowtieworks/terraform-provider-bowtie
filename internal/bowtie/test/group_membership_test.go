@@ -15,7 +15,7 @@ func TestAccGroupMembershipResource(t *testing.T) {
 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getGroupMembershipConfig(),
+				Config: getGroupMembershipConfig(true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -27,11 +27,20 @@ func TestAccGroupMembershipResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("bowtie_group_membership.admin_memberships", "group_id"),
 				),
 			},
+			{
+				Config: getGroupMembershipConfig(false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
 		},
 	})
 }
 
-func getGroupMembershipConfig() string {
+func getGroupMembershipConfig(enabled bool) string {
 	funcMap := template.FuncMap{
 		"notNil": func(val any) bool {
 			return val != nil
@@ -44,7 +53,8 @@ func getGroupMembershipConfig() string {
 	}
 
 	var output *strings.Builder = &strings.Builder{}
-	err = tmpl.ExecuteTemplate(output, "group_membership.tmpl", map[string]interface{}{
+	err = tmpl.ExecuteTemplate(output, "group_membership.tmpl", map[string]any{
+		"enabled":  enabled,
 		"provider": provider.ProviderConfig,
 	})
 	if err != nil {
