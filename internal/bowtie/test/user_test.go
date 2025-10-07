@@ -63,7 +63,7 @@ func TestAccUserResource(t *testing.T) {
 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "", false, false, false, false, false),
+				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "", false, false, false, false, false, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -83,7 +83,7 @@ func TestAccUserResource(t *testing.T) {
 				),
 			},
 			{
-				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "Owner", true, true, true, true, true),
+				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "Owner", true, true, true, true, true, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -103,7 +103,7 @@ func TestAccUserResource(t *testing.T) {
 				),
 			},
 			{
-				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "User", true, false, false, false, false),
+				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "User", true, false, false, false, false, true),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -122,11 +122,31 @@ func TestAccUserResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("bowtie_user.user", "id"),
 				),
 			},
+			{
+				Config: getUserConfig("Jane Doe", "jane.doe@example.com", "User", true, false, false, false, false, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("bowtie_user.user", "name", "Jane Doe"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "email", "jane.doe@example.com"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "role", "User"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "enabled", "false"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "authz_devices", "false"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "authz_policies", "false"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "authz_control_plane", "false"),
+					resource.TestCheckResourceAttr("bowtie_user.user", "authz_users", "false"),
+					resource.TestCheckResourceAttrSet("bowtie_user.user", "id"),
+				),
+			},
 		},
 	})
 }
 
-func getUserConfig(name, email, role string, authz, authz_users, authz_devices, authz_policies, authz_control_plane bool) string {
+func getUserConfig(name, email, role string, authz, authz_users, authz_devices, authz_policies, authz_control_plane bool, enabled bool) string {
 	funcMap := template.FuncMap{
 		"notNil": func(val any) bool {
 			return val != nil
@@ -149,6 +169,7 @@ func getUserConfig(name, email, role string, authz, authz_users, authz_devices, 
 		"authz_policies":      authz_policies,
 		"authz_users":         authz_users,
 		"authz_control_plane": authz_control_plane,
+		"enabled":             enabled,
 	})
 	if err != nil {
 		panic("Failed to render template")

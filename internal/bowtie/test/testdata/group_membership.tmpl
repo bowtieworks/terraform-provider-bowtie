@@ -1,17 +1,20 @@
 {{ .provider }}
-resource "bowtie_user" "jane" {
-  name = "Jane Doe"
-  email = "jane.doe@example.com"
+resource "bowtie_user" "billy" {
+  name = "Billy Doe"
+  email = "billy.doe@example.com"
+  enabled = "{{ .enabled }}"
 }
 
 resource "bowtie_user" "john" {
   name = "John Doe"
   email = "john.doe@example.com"
+  enabled = "{{ .enabled }}"
 }
 
 resource "bowtie_user" "logan" {
   name = "Logan"
   email = "logan@example.com"
+  enabled = "{{ .enabled }}"
 }
 
 resource "bowtie_group" "admins" {
@@ -21,7 +24,7 @@ resource "bowtie_group" "admins" {
 resource "bowtie_group_membership" "admin_memberships" {
   group_id = bowtie_group.admins.id
   users = [
-    bowtie_user.jane.id,
+    bowtie_user.billy.id,
     bowtie_user.logan.id,
     bowtie_user.john.id,
   ]
