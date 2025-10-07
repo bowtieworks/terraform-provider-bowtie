@@ -87,10 +87,21 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode < 200 || res.StatusCode >= 400 {
+		ct := res.Header.Get("Content-Type")
+		snippet := string(body)
+		if len(snippet) > 4096 {
+			snippet = snippet[:4096] + "…[truncated]"
+		}
+		return nil, fmt.Errorf("HTTP %d %s (%s): %s",
+			res.StatusCode, http.StatusText(res.StatusCode), ct, strings.TrimSpace(snippet))
 	}
 
 	return body, nil
