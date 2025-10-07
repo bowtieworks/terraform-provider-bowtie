@@ -159,7 +159,7 @@ func getUserConfig(name, email, role string, authz, authz_users, authz_devices, 
 	}
 
 	var output *strings.Builder = &strings.Builder{}
-	err = tmpl.ExecuteTemplate(output, "user.tmpl", map[string]interface{}{
+	err = tmpl.ExecuteTemplate(output, "user.tmpl", map[string]any{
 		"provider":            provider.ProviderConfig,
 		"name":                name,
 		"email":               email,

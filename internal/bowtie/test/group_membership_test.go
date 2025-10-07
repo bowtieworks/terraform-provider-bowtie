@@ -53,7 +53,7 @@ func getGroupMembershipConfig(enabled bool) string {
 	}
 
 	var output *strings.Builder = &strings.Builder{}
-	err = tmpl.ExecuteTemplate(output, "group_membership.tmpl", map[string]interface{}{
+	err = tmpl.ExecuteTemplate(output, "group_membership.tmpl", map[string]any{
 		"enabled":  enabled,
 		"provider": provider.ProviderConfig,
 	})

@@ -118,10 +118,6 @@ func (c *Client) UpsertResource(id, name, protocol string, location BowtieResour
 		return BowtieResource{}, err
 	}
 
-	if err != nil {
-		return BowtieResource{}, err
-	}
-
 	req, err := http.NewRequest(http.MethodPost, c.getHostURL("/policy/upsert_resource"), bytes.NewBuffer(body))
 	if err != nil {
 		return BowtieResource{}, err
