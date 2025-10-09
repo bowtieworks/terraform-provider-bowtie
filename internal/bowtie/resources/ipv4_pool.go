@@ -177,7 +177,7 @@ func (r *ipv4PoolResource) Read(ctx context.Context, req resource.ReadRequest, r
 	state.SkipFirstNAddresses = types.Int64Value(int64(ipv4Pool.SkipFirstNAddresses))
 
 	// Convert site strategies to JSON string
-	if ipv4Pool.SiteStrategies != nil && len(ipv4Pool.SiteStrategies) > 0 {
+	if len(ipv4Pool.SiteStrategies) > 0 {
 		strategiesJSON, err := json.Marshal(ipv4Pool.SiteStrategies)
 		if err != nil {
 			resp.Diagnostics.AddError(
