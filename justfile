@@ -14,7 +14,7 @@ help:
 
 # Generate user documentation
 generate:
-	go generate ./...
+	./scripts/gen-docs.sh
 
 # Ensure documentation is up-to-date
 stale-docs: generate

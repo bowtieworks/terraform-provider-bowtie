@@ -5,3 +5,4 @@ terraform-provider-bowtie
 container/*
 !container/skip-gui-init
 .envrc.local
+/.tf-plugins/

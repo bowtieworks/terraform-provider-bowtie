@@ -31,6 +31,15 @@ You may also use [traditional Terraform variables with `TF_VAR` environment vari
 ## Example Usage
 
 ```terraform
+terraform {
+  required_providers {
+    bowtie = {
+      source  = "registry.terraform.io/bowtieworks/bowtie"
+      version = "0.0.1"
+    }
+  }
+}
+
 # Set your username and password by exporting credentials to the
 # BOWTIE_USERNAME and BOWTIE_PASSWORD environment variables.
 
