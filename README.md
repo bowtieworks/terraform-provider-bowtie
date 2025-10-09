@@ -84,7 +84,7 @@ Setup your dev environment:
     ❯ cat ~/.terraformrc 
     provider_installation {
       dev_overrides {
-        "registry.terraform.io/bowtieworks/bowtie" = "/Users/Usernamne/bowtie/terraform-provider-bowtie"
+        "registry.terraform.io/bowtieworks/bowtie" = "/Users/Username/bowtie/terraform-provider-bowtie"
       }
     }
 
