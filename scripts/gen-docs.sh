@@ -89,4 +89,3 @@ go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest genera
   --rendered-provider-name "$PROVIDER_SHORT" \
   --website-source-dir "templates" \
   --rendered-website-dir "docs"
-  
