@@ -2,11 +2,12 @@
 set -euo pipefail
 
 # ------------------------------------------------------------
-# tfplugindocs hermetic generator
+# tfplugindocs hermetic generator (HashiCorp-style headings)
 # - Builds local provider
 # - Captures providers schema via dev_overrides (no registry)
 # - Duplicates schema key to include short name "bowtie"
 # - Renders docs from templates/ into docs/
+# - Uses short rendered name so page_title => "bowtie Provider"
 # ------------------------------------------------------------
 
 # ---- Settings
@@ -21,7 +22,7 @@ ARCH="$(go env GOARCH)"
 
 # ---- Paths
 ROOT="$PWD/.tf-plugins"
-BUILD_DIR="$ROOT/dev/${ORG}/${NAME}"           # where the local binary lives (dev_overrides points here)
+BUILD_DIR="$ROOT/dev/${ORG}/${NAME}"           # local binary lives here (dev_overrides points here)
 HOME_DIR="$ROOT/home"                          # throwaway HOME for Terraform CLI config
 SCHEMA_JSON="$ROOT/providers-schema.json"
 SCHEMA_JSON_BOWTIE="$ROOT/providers-schema.bowtie.json"
@@ -39,7 +40,7 @@ TFRC="$HOME_DIR/.terraformrc"
 cat > "$TFRC" <<RC
 provider_installation {
   dev_overrides {
-    "$PROVIDER_FQN"                  = "$BUILD_DIR"
+    "$PROVIDER_FQN"                        = "$BUILD_DIR"
     "registry.terraform.io/hashicorp/$NAME" = "$BUILD_DIR"
   }
   direct {}
@@ -72,7 +73,6 @@ terraform -chdir="$tmpdir" init -input=false -no-color >/dev/null
 terraform -chdir="$tmpdir" providers schema -json > "$SCHEMA_JSON"
 
 # ---- Duplicate schema key so tfplugindocs can find either FQN or short name
-# (schema contains only the FQN key by default)
 jq '.provider_schemas["'"$PROVIDER_SHORT"'"] = .provider_schemas["'"$PROVIDER_FQN"'"]' \
   "$SCHEMA_JSON" > "$SCHEMA_JSON_BOWTIE"
 
@@ -80,11 +80,13 @@ jq '.provider_schemas["'"$PROVIDER_SHORT"'"] = .provider_schemas["'"$PROVIDER_FQ
 terraform fmt -recursive ./examples/ || true
 
 # ---- Render docs
-# If templates/ does not exist, tfplugindocs will generate minimal templates
-# then render them into docs/.
+# NOTE: Using short rendered name ("bowtie") produces HashiCorp-style headings:
+#   page_title: "bowtie Provider"
+#   # bowtie Provider
 go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest generate \
   --providers-schema "$SCHEMA_JSON_BOWTIE" \
   --provider-name "$PROVIDER_SHORT" \
-  --rendered-provider-name "$PROVIDER_FQN" \
+  --rendered-provider-name "$PROVIDER_SHORT" \
   --website-source-dir "templates" \
   --rendered-website-dir "docs"
+  
