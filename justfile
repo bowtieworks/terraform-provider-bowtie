@@ -14,20 +14,7 @@ help:
 
 # Generate user documentation
 generate:
-	go generate ./...
-
-# Ensure documentation is up-to-date
-stale-docs: generate
-	#!/usr/bin/env bash
-
-	if git diff --no-ext-diff --quiet --exit-code docs
-	then
-		echo "Documentation is up-to-date"
-	else
-		echo -e "\n[ ! ] Documentation is out-of-date with source.\n"
-		echo "Regenerate and commit updated docs with 'just generate'."
-		exit 1
-	fi
+	./scripts/gen-docs.sh
 
 # Perform documentation checks
 stylecheck: generate

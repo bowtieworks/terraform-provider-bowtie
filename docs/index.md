@@ -1,5 +1,5 @@
 ---
-page_title: "Bowtie Provider"
+page_title: "Registry.terraform.io/Bowtieworks/Bowtie Provider"
 description: |-
   The Bowtie provider for Terraform configures your Bowtie installation via native Terraform resources instead of the Controller web interface. Use the provider to declaratively manage API resources such as resource groups, DNS resources, user groups, and more.
   
@@ -8,7 +8,7 @@ description: |-
   For more documentation about installing and configuring Bowtie, refer to the official [Bowtie documentation](https://docs.bowtie.works/).
 ---
 
-# Bowtie Provider
+# Registry.terraform.io/Bowtieworks/Bowtie Provider
 
 The Bowtie provider for Terraform configures your Bowtie installation via native Terraform resources instead of the Controller web interface. Use the provider to declaratively manage API resources such as resource groups, DNS resources, user groups, and more.
 
@@ -20,7 +20,7 @@ For more documentation about installing and configuring Bowtie, refer to the off
 
 !> The Bowtie provider requires valid credentials to perform API calls. Make sure that your username and password are set securely via either approach mentioned here. Setting credentials via plain values passed to the `bowtie { }` provider configuration block is supported, but discouraged.
 
-In addition to the username and password parameters to the `bowtie` resource, you may also populate environment variables to authenticate calls to the Bowtie API.
+In addition to the username and password parameters to the `registry.terraform.io/bowtieworks/bowtie` resource, you may also populate environment variables to authenticate calls to the Bowtie API.
 
 To do so, set the `BOWTIE_USERNAME` and `BOWTIE_PASSWORD` environment variables and leave the `username` and `password` fields unset for the `bowtie { }` provider configuration block.
 
@@ -31,6 +31,15 @@ You may also use [traditional Terraform variables with `TF_VAR` environment vari
 ## Example Usage
 
 ```terraform
+terraform {
+  required_providers {
+    bowtie = {
+      source  = "registry.terraform.io/bowtieworks/bowtie"
+      version = "0.0.1"
+    }
+  }
+}
+
 # Set your username and password by exporting credentials to the
 # BOWTIE_USERNAME and BOWTIE_PASSWORD environment variables.
 

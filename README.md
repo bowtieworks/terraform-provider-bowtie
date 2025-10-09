@@ -15,7 +15,7 @@ And then configuring a few dns records would look something like this:
     terraform {
     required_providers {
         bowtie = {
-            source = "bowtie.works/bowtie/bowtie"
+            source = "registry.terraform.io/bowtieworks/bowtie"
             version = "0.1.3"
             }
         }
@@ -84,11 +84,15 @@ Setup your dev environment:
     ❯ cat ~/.terraformrc 
     provider_installation {
       dev_overrides {
-        "bowtie.works/bowtie/bowtie" = "/home/issac/Projects/bowtie/terraform-provider-bowtie"
+        "registry.terraform.io/bowtieworks/bowtie" = "/Users/Usernamne/bowtie/terraform-provider-bowtie"
       }
     }
 
 go build -o terraform-provider-bowtie
+
+### Generate Docs
+
+`just generate`
 
 ### Testing
 
