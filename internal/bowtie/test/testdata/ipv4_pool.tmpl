@@ -1,0 +1,14 @@
+{{ .provider }}
+
+resource "bowtie_ipv4_pool" "{{ .resource }}" {
+  range                       = "{{ .range }}"
+  assign_addresses_from_here  = "{{ .assign_addresses_from_here }}"
+  skip_first_n_addresses      = {{ .skip_first_n_addresses }}
+
+  {{- if .site_strategies }}
+  # JSON string; use heredoc to avoid escaping issues
+  site_strategies = <<JSON
+{{ .site_strategies }}
+JSON
+  {{- end }}
+}
