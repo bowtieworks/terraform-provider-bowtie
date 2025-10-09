@@ -13,12 +13,12 @@ In our example we'll set up these variables:
 And then configuring a few dns records would look something like this:
 
     terraform {
-    required_providers {
+      required_providers {
         bowtie = {
-            source = "registry.terraform.io/bowtieworks/bowtie"
-            version = "0.1.3"
-            }
+            source = "bowtieworks/bowtie"
+            version = "0.6.0"
         }
+      }
     }
 
     variable bowtie_host {
