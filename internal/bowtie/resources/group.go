@@ -94,6 +94,7 @@ func (g *groupResource) Create(ctx context.Context, req resource.CreateRequest, 
 			"Error creating group",
 			"Could not create the group, unexpected error: "+err.Error(),
 		)
+		return
 	}
 
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))

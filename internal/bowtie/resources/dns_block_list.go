@@ -190,9 +190,17 @@ func (bl *dnsBlockListResource) Read(ctx context.Context, req resource.ReadReque
 	state.Name = types.StringValue(blocklist.Name)
 	state.Upstream = types.StringValue(blocklist.Upstream)
 
-	overrides, diags := types.ListValueFrom(
-		ctx, types.StringType, strings.Split(blocklist.OverrideToAllow, "\n"),
-	)
+	rawOverrides := blocklist.OverrideToAllow
+	overrideEntries := []string{}
+	if strings.TrimSpace(rawOverrides) != "" {
+		for _, entry := range strings.Split(rawOverrides, "\n") {
+			if trimmed := strings.TrimSpace(entry); trimmed != "" {
+				overrideEntries = append(overrideEntries, trimmed)
+			}
+		}
+	}
+
+	overrides, diags := types.ListValueFrom(ctx, types.StringType, overrideEntries)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
