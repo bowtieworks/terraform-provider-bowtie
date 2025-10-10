@@ -170,7 +170,7 @@ func (c *Client) GetPolicy(id string) (BowtiePolicy, error) {
 func (c *Client) GetResourceGroups() (map[string]BowtieResourceGroup, error) {
 	rp, err := c.GetPoliciesAndResources()
 	if err != nil {
-		return make(map[string]BowtieResourceGroup), nil
+		return nil, err
 	}
 
 	return rp.ResourceGroups, nil

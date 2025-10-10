@@ -242,12 +242,19 @@ func (sr *siteRangeResource) Update(ctx context.Context, req resource.UpdateRequ
 	var is_ipv4 bool
 	var is_ipv6 bool
 	var cidr string
-	if !(plan.IPV4Range.IsNull() && plan.IPV4Range.IsUnknown()) {
+	if !plan.IPV4Range.IsUnknown() && !plan.IPV4Range.IsNull() {
 		is_ipv4 = true
 		cidr = plan.IPV4Range.ValueString()
-	} else if !(plan.IPV6Range.IsNull() && plan.IPV6Range.IsUnknown()) {
+	} else if !plan.IPV6Range.IsUnknown() && !plan.IPV6Range.IsNull() {
 		is_ipv6 = true
 		cidr = plan.IPV6Range.ValueString()
+	} else {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("ipv4_range"),
+			"Missing range information",
+			"Expected either ipv4_range or ipv6_range to be configured in plan.",
+		)
+		return
 	}
 
 	err := sr.client.UpsertSiteRange(plan.SiteID.ValueString(), plan.ID.ValueString(), plan.Name.ValueString(), plan.Description.ValueString(), cidr, is_ipv4, is_ipv6, plan.Weight.ValueInt64(), plan.Metric.ValueInt64())

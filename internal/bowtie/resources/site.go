@@ -158,7 +158,7 @@ func (s *siteResource) Update(ctx context.Context, req resource.UpdateRequest, r
 }
 
 func (s *siteResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state groupResourceModel
+	var state siteResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

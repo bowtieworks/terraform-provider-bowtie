@@ -248,6 +248,7 @@ func (d *dnsResource) Create(ctx context.Context, req resource.CreateRequest, re
 			"Failed talking to bowtie server",
 			"Unexpected error creating dns setting: "+err.Error(),
 		)
+		return
 	}
 
 	plan.LastUpdated = types.StringValue(time.Now().Format(time.RFC850))
@@ -334,14 +335,15 @@ func (d *dnsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return state.DNS64Exclude[i].Order.ValueInt64() < state.DNS64Exclude[j].Order.ValueInt64()
 	})
 
-	var includeSites []string
-	resp.Diagnostics.Append(state.IncludeOnlySites.ElementsAs(ctx, &includeSites, false)...)
+	state.Name = types.StringValue(dns.Name)
+	includeSites, diags := types.ListValueFrom(ctx, types.StringType, dns.IncludeOnlySites)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.IncludeOnlySites = includeSites
 
-	state.Name = types.StringValue(dns.Name)
-
+	state.IsDNS64 = types.BoolValue(dns.IsDNS64)
 	state.IsCounted = types.BoolValue(dns.IsCounted)
 	state.IsDropA = types.BoolValue(dns.IsDropA)
 	state.IsDropAll = types.BoolValue(dns.IsDropAll)

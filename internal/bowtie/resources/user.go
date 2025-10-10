@@ -192,10 +192,10 @@ func (u *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	state.Enabled = types.BoolValue(user.Status == "Active")
 
-	state.AuthzControlPlane = types.BoolValue(*user.AuthzControlPlane)
-	state.AuthzDevices = types.BoolValue(*user.AuthzDevices)
-	state.AuthzPolicies = types.BoolValue(*user.AuthzPolicies)
-	state.AuthzUsers = types.BoolValue(*user.AuthzUsers)
+	state.AuthzControlPlane = types.BoolPointerValue(user.AuthzControlPlane)
+	state.AuthzDevices = types.BoolPointerValue(user.AuthzDevices)
+	state.AuthzPolicies = types.BoolPointerValue(user.AuthzPolicies)
+	state.AuthzUsers = types.BoolPointerValue(user.AuthzUsers)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

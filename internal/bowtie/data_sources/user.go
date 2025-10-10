@@ -113,10 +113,10 @@ func (u *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	state.Name = types.StringValue(user.Name)
 	state.Status = types.StringValue(user.Status)
 
-	state.AuthzControlPlane = types.BoolValue(*user.AuthzControlPlane)
-	state.AuthzDevices = types.BoolValue(*user.AuthzDevices)
-	state.AuthzPolicies = types.BoolValue(*user.AuthzPolicies)
-	state.AuthzUsers = types.BoolValue(*user.AuthzUsers)
+	state.AuthzControlPlane = types.BoolPointerValue(user.AuthzControlPlane)
+	state.AuthzDevices = types.BoolPointerValue(user.AuthzDevices)
+	state.AuthzPolicies = types.BoolPointerValue(user.AuthzPolicies)
+	state.AuthzUsers = types.BoolPointerValue(user.AuthzUsers)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }

@@ -158,10 +158,18 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 	var portsCollection []int64
 	if !plan.Ports.Range.IsNull() {
 		portsRange = []int64{}
-		plan.Ports.Range.ElementsAs(ctx, &portsRange, true)
+		diags := plan.Ports.Range.ElementsAs(ctx, &portsRange, true)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	} else if !plan.Ports.Collection.IsNull() {
 		portsCollection = []int64{}
-		plan.Ports.Collection.ElementsAs(ctx, &portsCollection, true)
+		diags := plan.Ports.Collection.ElementsAs(ctx, &portsCollection, true)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	} else {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("ports"),
@@ -344,10 +352,18 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 	var portsCollection []int64
 	if !plan.Ports.Range.IsNull() {
 		portsRange = []int64{}
-		plan.Ports.Range.ElementsAs(ctx, &portsRange, true)
+		diags := plan.Ports.Range.ElementsAs(ctx, &portsRange, true)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	} else if !plan.Ports.Collection.IsNull() {
 		portsCollection = []int64{}
-		plan.Ports.Collection.ElementsAs(ctx, &portsCollection, true)
+		diags := plan.Ports.Collection.ElementsAs(ctx, &portsCollection, true)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	} else {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("ports"),
