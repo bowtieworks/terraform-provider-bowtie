@@ -13,6 +13,7 @@ func (c *Client) UpsertDNSBlockList(id string, name string, upstream string, ove
 		Name:            name,
 		Upstream:        upstream,
 		OverrideToAllow: override_to_allow,
+		IsAllowlist:     false,
 	}
 
 	body, err := json.Marshal(payload)

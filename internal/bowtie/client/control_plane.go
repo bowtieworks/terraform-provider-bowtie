@@ -58,6 +58,7 @@ type DNSBlockList struct {
 	Name            string `json:"name"`
 	Upstream        string `json:"upstream,omitempty"`
 	OverrideToAllow string `json:"override_to_allow"`
+	IsAllowlist     bool   `json:"is_allowlist"`
 }
 
 type Server struct {
