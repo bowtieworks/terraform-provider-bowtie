@@ -16,33 +16,39 @@ Note that you must configure appropriate credentials to authenticate with the Bo
 
 For more documentation about installing and configuring Bowtie, refer to the official [Bowtie documentation](https://docs.bowtie.works/).
 
-## Environment Variables
+## Authentication
 
-!> The Bowtie provider requires valid credentials to perform API calls. Make sure that your username and password are set securely via either approach mentioned here. Setting credentials via plain values passed to the `bowtie { }` provider configuration block is supported, but discouraged.
+The provider authenticates to the Controller as a Bowtie user. Create a **dedicated service account** for Terraform rather than reusing a human administrator's login:
 
-In addition to the username and password parameters to the `bowtie` resource, you may also populate environment variables to authenticate calls to the Bowtie API.
+- Add a local administrator in the Controller that is used only by automation, and grant it the least privilege it needs, for example, a Limited Administrator scoped to just the areas Terraform manages, such as policies and resources.
+- In an organization that uses SSO, keep this as a separate local account. Your administrators sign in through your identity provider; the automation account is independent, so it can be rotated or disabled on its own without affecting anyone's access.
+- Rotate the account's password on a regular schedule. Because it is dedicated to Terraform, you can rotate or revoke it without disrupting human logins.
 
-To do so, set the `BOWTIE_USERNAME` and `BOWTIE_PASSWORD` environment variables and leave the `username` and `password` fields unset for the `bowtie { }` provider configuration block.
+!> Supply the service account's credentials from a secrets manager or your CI secret store, never from version-controlled Terraform configuration. Set the `BOWTIE_USERNAME` and `BOWTIE_PASSWORD` environment variables (and `BOWTIE_HOST` for the endpoint) and leave `username` and `password` unset in the `bowtie { }` block. Passing credentials as plain values in the provider block is supported but strongly discouraged.
 
-The target API endpoint can also be set via the `BOWTIE_HOST` environment variable.
-
-You may also use [traditional Terraform variables with `TF_VAR` environment variables to inject configuration values](https://developer.hashicorp.com/terraform/cli/config/environment-variables#tf_var_name) depending on your preference.
+You may also inject credentials with [Terraform `TF_VAR` environment variables](https://developer.hashicorp.com/terraform/cli/config/environment-variables#tf_var_name), for example, pulling them from HashiCorp Vault, and reference them as `var.*` in the provider block.
 
 ## Example Usage
 
 ```terraform
-# Set your username and password by exporting credentials to the
-# BOWTIE_USERNAME and BOWTIE_PASSWORD environment variables.
+# Authenticate Terraform with a DEDICATED Bowtie service account: a local
+# administrator created solely for automation and scoped to the least
+# privilege it needs. Do not reuse a human administrator's credentials, and in
+# an SSO-backed organization keep this as a separate local account so that
+# automation never depends on a person's identity.
+#
+# Supply the account's credentials from a secrets manager or CI secret store
+# through the BOWTIE_USERNAME and BOWTIE_PASSWORD environment variables (and
+# BOWTIE_HOST for the endpoint). Leave them out of your Terraform configuration.
 
 provider "bowtie" {
   host = "https://bowtie.example.com"
 }
 
-# Set your username and password by exporting credentials to the
-# TF_VAR_bowtie_username and TF_VAR_bowtie_password environment
-# variables. Note that you must also define these variables in
-# `variable bowtie_username { }` and `variable bowtie_password { }`
-# blocks.
+# Equivalent: inject the same credentials as Terraform variables (for example,
+# sourced from HashiCorp Vault or a CI secret) via TF_VAR_bowtie_username and
+# TF_VAR_bowtie_password. Declare matching `variable "bowtie_username" {}` and
+# `variable "bowtie_password" {}` blocks marked `sensitive = true`.
 
 provider "bowtie" {
   host     = "https://bowtie.example.com"
@@ -50,12 +56,18 @@ provider "bowtie" {
   password = var.bowtie_password
 }
 
-# Set your username and password with plaintext values (not recommended)
+# A development controller with a self-signed certificate.
 
 provider "bowtie" {
-  host     = "https://bowtie.example.com"
-  username = "example"
-  password = "test1123"
+  host     = "https://bt0.dev.example.com"
+  insecure = true
+}
+
+# A controller whose certificate is issued by a private certificate authority.
+
+provider "bowtie" {
+  host      = "https://bowtie.internal.example.com"
+  ca_bundle = file("/etc/ssl/certs/internal-ca.pem")
 }
 ```
 
@@ -64,8 +76,10 @@ provider "bowtie" {
 
 ### Optional
 
+- `ca_bundle` (String) A PEM-encoded CA bundle (inline contents or a path to a file) used to verify the Controller's TLS certificate, for Controllers issued by a private certificate authority. Honors the `BOWTIE_CA_BUNDLE` environment variable if set.
 - `host` (String) The Bowtie HTTP Controller endpoint. Honors the `BOWTIE_HOST` environment variable if set. Example: `https://bowtie.example.com`
+- `insecure` (Boolean) Skip TLS certificate verification when connecting to the Controller. Honors the `BOWTIE_INSECURE` environment variable if set. Intended for development controllers with self-signed certificates; do not enable against production.
 - `lazy_authentication` (Boolean) By default, the provider will authenticate to the Bowtie API just in time (or lazily) which permits use cases like creating Controllers in Terraform before using their API endpoints. Set this variable to `false` if you instead want to authenticate at the time the provider is configured - for example, to catch authentication errors up-front before starting an `apply` or `plan`.
-- `password` (String, Sensitive) Administrator password login credentials. Honors the `BOWTIE_PASSWORD` environment variable if set
+- `password` (String, Sensitive) The service account's password. Supply it from a secrets manager via the `BOWTIE_PASSWORD` environment variable rather than in version-controlled Terraform configuration. Honors the `BOWTIE_PASSWORD` environment variable if set.
 - `tagged_locations` (Boolean) Control whether the provider will send policy resource locations using the new tagged type format or legacy format.
-- `username` (String) Administrator username/email login credentials. Honors the `BOWTIE_USERNAME` environment variable if set
+- `username` (String) The login name (username or email) of the Bowtie account Terraform authenticates as. Use a dedicated service account scoped to the least privilege it needs, not a human administrator. Honors the `BOWTIE_USERNAME` environment variable, which is the recommended way to supply it.

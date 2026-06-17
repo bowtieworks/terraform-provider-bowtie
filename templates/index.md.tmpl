@@ -8,17 +8,17 @@ description: |-
 
 {{ .Description | trimspace }}
 
-## Environment Variables
+## Authentication
 
-!> The Bowtie provider requires valid credentials to perform API calls. Make sure that your username and password are set securely via either approach mentioned here. Setting credentials via plain values passed to the `bowtie { }` provider configuration block is supported, but discouraged.
+The provider authenticates to the Controller as a Bowtie user. Create a **dedicated service account** for Terraform rather than reusing a human administrator's login:
 
-In addition to the username and password parameters to the `{{ .ProviderShortName }}` resource, you may also populate environment variables to authenticate calls to the Bowtie API.
+- Add a local administrator in the Controller that is used only by automation, and grant it the least privilege it needs, for example, a Limited Administrator scoped to just the areas Terraform manages, such as policies and resources.
+- In an organization that uses SSO, keep this as a separate local account. Your administrators sign in through your identity provider; the automation account is independent, so it can be rotated or disabled on its own without affecting anyone's access.
+- Rotate the account's password on a regular schedule. Because it is dedicated to Terraform, you can rotate or revoke it without disrupting human logins.
 
-To do so, set the `BOWTIE_USERNAME` and `BOWTIE_PASSWORD` environment variables and leave the `username` and `password` fields unset for the `bowtie { }` provider configuration block.
+!> Supply the service account's credentials from a secrets manager or your CI secret store, never from version-controlled Terraform configuration. Set the `BOWTIE_USERNAME` and `BOWTIE_PASSWORD` environment variables (and `BOWTIE_HOST` for the endpoint) and leave `username` and `password` unset in the `bowtie { }` block. Passing credentials as plain values in the provider block is supported but strongly discouraged.
 
-The target API endpoint can also be set via the `BOWTIE_HOST` environment variable.
-
-You may also use [traditional Terraform variables with `TF_VAR` environment variables to inject configuration values](https://developer.hashicorp.com/terraform/cli/config/environment-variables#tf_var_name) depending on your preference.
+You may also inject credentials with [Terraform `TF_VAR` environment variables](https://developer.hashicorp.com/terraform/cli/config/environment-variables#tf_var_name), for example, pulling them from HashiCorp Vault, and reference them as `var.*` in the provider block.
 
 ## Example Usage
 

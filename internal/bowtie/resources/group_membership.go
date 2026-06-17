@@ -171,5 +171,7 @@ func (g *GroupMembershipResource) Delete(ctx context.Context, req resource.Delet
 }
 
 func (g *GroupMembershipResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// The membership is keyed by the group it belongs to, so import the ID into
+	// group_id rather than a non-existent id attribute.
+	resource.ImportStatePassthroughID(ctx, path.Root("group_id"), req, resp)
 }

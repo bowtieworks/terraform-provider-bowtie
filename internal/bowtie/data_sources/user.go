@@ -91,6 +91,7 @@ func (u *userDataSource) Configure(_ context.Context, req datasource.ConfigureRe
 			"Unexpected Resource Configuration Type",
 			fmt.Sprintf("Expected *client.Client, got: %T, please report this to the provider.", req.ProviderData),
 		)
+		return
 	}
 
 	u.client = client
@@ -99,6 +100,9 @@ func (u *userDataSource) Configure(_ context.Context, req datasource.ConfigureRe
 func (u *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state userModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	user, err := u.client.GetUserByEmail(ctx, state.Email.ValueString())
 	if err != nil {
@@ -113,10 +117,19 @@ func (u *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	state.Name = types.StringValue(user.Name)
 	state.Status = types.StringValue(user.Status)
 
-	state.AuthzControlPlane = types.BoolValue(*user.AuthzControlPlane)
-	state.AuthzDevices = types.BoolValue(*user.AuthzDevices)
-	state.AuthzPolicies = types.BoolValue(*user.AuthzPolicies)
-	state.AuthzUsers = types.BoolValue(*user.AuthzUsers)
+	state.AuthzControlPlane = boolFromPtr(user.AuthzControlPlane)
+	state.AuthzDevices = boolFromPtr(user.AuthzDevices)
+	state.AuthzPolicies = boolFromPtr(user.AuthzPolicies)
+	state.AuthzUsers = boolFromPtr(user.AuthzUsers)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+}
+
+// boolFromPtr converts an optional server bool into a known attribute value,
+// treating an omitted field as false rather than panicking on a nil pointer.
+func boolFromPtr(value *bool) types.Bool {
+	if value == nil {
+		return types.BoolValue(false)
+	}
+	return types.BoolValue(*value)
 }

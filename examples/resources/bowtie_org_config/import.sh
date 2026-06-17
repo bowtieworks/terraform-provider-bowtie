@@ -1,0 +1,1 @@
+terraform import bowtie_org_config.this organization-config

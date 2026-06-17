@@ -23,6 +23,8 @@ type bowtieProviderModel struct {
 	Password           types.String `tfsdk:"password"`
 	LazyAuthentication types.Bool   `tfsdk:"lazy_authentication"`
 	TaggedLocations    types.Bool   `tfsdk:"tagged_locations"`
+	Insecure           types.Bool   `tfsdk:"insecure"`
+	CABundle           types.String `tfsdk:"ca_bundle"`
 }
 
 func New() provider.Provider {
@@ -43,11 +45,11 @@ For more documentation about installing and configuring Bowtie, refer to the off
 				Optional:    true,
 			},
 			"username": schema.StringAttribute{
-				Description: "Administrator username/email login credentials. Honors the `BOWTIE_USERNAME` environment variable if set",
+				Description: "The login name (username or email) of the Bowtie account Terraform authenticates as. Use a dedicated service account scoped to the least privilege it needs, not a human administrator. Honors the `BOWTIE_USERNAME` environment variable, which is the recommended way to supply it.",
 				Optional:    true,
 			},
 			"password": schema.StringAttribute{
-				Description: "Administrator password login credentials. Honors the `BOWTIE_PASSWORD` environment variable if set",
+				Description: "The service account's password. Supply it from a secrets manager via the `BOWTIE_PASSWORD` environment variable rather than in version-controlled Terraform configuration. Honors the `BOWTIE_PASSWORD` environment variable if set.",
 				Sensitive:   true,
 				Optional:    true,
 			},
@@ -57,6 +59,14 @@ For more documentation about installing and configuring Bowtie, refer to the off
 			},
 			"tagged_locations": schema.BoolAttribute{
 				Description: "Control whether the provider will send policy resource locations using the new tagged type format or legacy format.",
+				Optional:    true,
+			},
+			"insecure": schema.BoolAttribute{
+				Description: "Skip TLS certificate verification when connecting to the Controller. Honors the `BOWTIE_INSECURE` environment variable if set. Intended for development controllers with self-signed certificates; do not enable against production.",
+				Optional:    true,
+			},
+			"ca_bundle": schema.StringAttribute{
+				Description: "A PEM-encoded CA bundle (inline contents or a path to a file) used to verify the Controller's TLS certificate, for Controllers issued by a private certificate authority. Honors the `BOWTIE_CA_BUNDLE` environment variable if set.",
 				Optional:    true,
 			},
 		},
@@ -156,11 +166,27 @@ func (b *BowtieProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		tagged_locations = config.TaggedLocations.ValueBool()
 	}
 
+	insecure := os.Getenv("BOWTIE_INSECURE") == "true" || os.Getenv("BOWTIE_INSECURE") == "1"
+	if !config.Insecure.IsNull() {
+		insecure = config.Insecure.ValueBool()
+	}
+	if insecure {
+		resp.Diagnostics.AddWarning(
+			"TLS verification disabled",
+			"The Bowtie provider is configured with insecure = true, which disables TLS certificate verification. This is not safe for production use.",
+		)
+	}
+
+	ca_bundle := os.Getenv("BOWTIE_CA_BUNDLE")
+	if !config.CABundle.IsNull() {
+		ca_bundle = config.CABundle.ValueString()
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	client, err := client.NewClient(host, username, password, lazy_auth, tagged_locations)
+	client, err := client.NewClient(host, username, password, lazy_auth, tagged_locations, insecure, ca_bundle)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to create Bowtie API Client",
@@ -185,11 +211,24 @@ func (b *BowtieProvider) Resources(_ context.Context) []func() resource.Resource
 		resources.NewResourceGroupResource,
 		resources.NewGroupMembershipResource,
 		resources.NewUserResource,
+		resources.NewPolicyResource,
+		resources.NewDeviceGroupResource,
+		resources.NewCollectionResource,
+		resources.NewRouteExclusionResource,
+		resources.NewControllerResource,
+		resources.NewIPv4RangeResource,
+		resources.NewIPv6RangeResource,
+		resources.NewOrgConfigResource,
 	}
 }
 
 func (b *BowtieProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		data_sources.NewUserDataSource,
+		data_sources.NewResourceGroupDataSource,
+		data_sources.NewGroupDataSource,
+		data_sources.NewDeviceGroupDataSource,
+		data_sources.NewCollectionDataSource,
+		data_sources.NewDeviceDataSource,
 	}
 }

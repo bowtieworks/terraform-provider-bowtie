@@ -14,17 +14,7 @@ type PoliciesEndpointResponse struct {
 	Resources      map[string]BowtieResource      `json:"resources"`
 }
 
-type BowtiePolicy struct {
-	ID string `json:"id"`
-	// Source BowtiePolicySource `json:"source"`
-	// Dest   string             `json:"dest"`
-	// Action string             `json:"action"`
-}
-
-type BowtiePolicySource struct {
-	ID        string `json:"id"`
-	Predicate string `json:"predicate"`
-}
+// BowtiePolicy and its source predicate types are defined in policy.go.
 
 type BowtieResourceGroup struct {
 	ID        string   `json:"id"`
@@ -170,7 +160,7 @@ func (c *Client) GetPolicy(id string) (BowtiePolicy, error) {
 func (c *Client) GetResourceGroups() (map[string]BowtieResourceGroup, error) {
 	rp, err := c.GetPoliciesAndResources()
 	if err != nil {
-		return make(map[string]BowtieResourceGroup), nil
+		return nil, err
 	}
 
 	return rp.ResourceGroups, nil

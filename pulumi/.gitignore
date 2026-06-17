@@ -1,0 +1,21 @@
+# Compiled provider and generator binaries
+/provider/cmd/pulumi-resource-bowtie/pulumi-resource-bowtie
+/provider/cmd/pulumi-tfgen-bowtie/pulumi-tfgen-bowtie
+/bin/
+
+# Empty plugin manifests the schema/SDK generator touches; not used by the build.
+/provider/cmd/pulumi-resource-bowtie/Pulumi.yaml
+/sdk/*/Pulumi.yaml
+
+# Generated SDK source under sdk/ is committed. Ignore per-language build
+# outputs and dependency trees so building an SDK does not dirty the repo.
+/sdk/nodejs/node_modules/
+/sdk/nodejs/bin/
+/sdk/python/build/
+/sdk/python/dist/
+/sdk/python/*.egg-info/
+/sdk/dotnet/bin/
+/sdk/dotnet/obj/
+__pycache__/
+
+*.exe

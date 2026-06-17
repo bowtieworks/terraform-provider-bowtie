@@ -1,0 +1,3773 @@
+{
+    "name": "bowtie",
+    "displayName": "Bowtie",
+    "description": "A Pulumi package for managing Bowtie ZTNA resources.",
+    "keywords": [
+        "pulumi",
+        "bowtie",
+        "ztna",
+        "category/network"
+    ],
+    "homepage": "https://bowtie.works",
+    "license": "Apache-2.0",
+    "attribution": "This Pulumi package is based on the [`bowtie` Terraform Provider](https://github.com/bowtieworks/terraform-provider-bowtie).",
+    "repository": "https://github.com/bowtieworks/pulumi-bowtie",
+    "publisher": "Bowtie",
+    "meta": {
+        "moduleFormat": "(.*)(?:/[^/]*)"
+    },
+    "language": {
+        "nodejs": {
+            "packageDescription": "A Pulumi package for managing Bowtie ZTNA resources.",
+            "readme": "> This provider is a derived work of the [Terraform Provider](https://github.com/bowtieworks/terraform-provider-bowtie)\n> distributed under [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). If you encounter a bug or missing feature,\n> first check the [`pulumi-bowtie` repo](https://github.com/bowtieworks/pulumi-bowtie/issues); however, if that doesn't turn up anything,\n> please consult the source [`terraform-provider-bowtie` repo](https://github.com/bowtieworks/terraform-provider-bowtie/issues).",
+            "compatibility": "tfbridge20",
+            "disableUnionOutputTypes": true
+        },
+        "python": {
+            "readme": "> This provider is a derived work of the [Terraform Provider](https://github.com/bowtieworks/terraform-provider-bowtie)\n> distributed under [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). If you encounter a bug or missing feature,\n> first check the [`pulumi-bowtie` repo](https://github.com/bowtieworks/pulumi-bowtie/issues); however, if that doesn't turn up anything,\n> please consult the source [`terraform-provider-bowtie` repo](https://github.com/bowtieworks/terraform-provider-bowtie/issues).",
+            "compatibility": "tfbridge20",
+            "pyproject": {}
+        }
+    },
+    "config": {
+        "variables": {
+            "caBundle": {
+                "type": "string",
+                "description": "A PEM-encoded CA bundle (inline contents or a path to a file) used to verify the Controller's TLS certificate, for\nControllers issued by a private certificate authority. Honors the `BOWTIE_CA_BUNDLE` environment variable if set.\n"
+            },
+            "host": {
+                "type": "string",
+                "description": "The Bowtie HTTP Controller endpoint. Honors the `BOWTIE_HOST` environment variable if set. Example:\n`https://bowtie.example.com`\n"
+            },
+            "insecure": {
+                "type": "boolean",
+                "description": "Skip TLS certificate verification when connecting to the Controller. Honors the `BOWTIE_INSECURE` environment variable\nif set. Intended for development controllers with self-signed certificates; do not enable against production.\n"
+            },
+            "lazyAuthentication": {
+                "type": "boolean"
+            },
+            "password": {
+                "type": "string",
+                "secret": true
+            },
+            "taggedLocations": {
+                "type": "boolean",
+                "description": "Control whether the provider will send policy resource locations using the new tagged type format or legacy format.\n"
+            },
+            "username": {
+                "type": "string"
+            }
+        }
+    },
+    "types": {
+        "bowtie:index/CollectionMember:CollectionMember": {
+            "properties": {
+                "comment": {
+                    "type": "string",
+                    "description": "An optional comment describing this member.\n"
+                },
+                "expires": {
+                    "type": "string",
+                    "description": "An optional RFC 3339 timestamp after which the Controller automatically removes this member.\n"
+                },
+                "location": {
+                    "$ref": "#/types/bowtie:index/CollectionMemberLocation:CollectionMemberLocation",
+                    "description": "The location this member matches. Set exactly one of `ip`, `cidr`, `dns`, or `collection`.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "A human readable name for this member.\n"
+                }
+            },
+            "type": "object",
+            "required": [
+                "location",
+                "name"
+            ]
+        },
+        "bowtie:index/CollectionMemberLocation:CollectionMemberLocation": {
+            "properties": {
+                "cidr": {
+                    "type": "string",
+                    "description": "A CIDR range.\n"
+                },
+                "collection": {
+                    "type": "string",
+                    "description": "The ID of another collection to nest inside this one.\n"
+                },
+                "dns": {
+                    "type": "string",
+                    "description": "A DNS name.\n"
+                },
+                "ip": {
+                    "type": "string",
+                    "description": "A single IP address.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/DnsExclude:DnsExclude": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Internal resource ID.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Name to exclude sending to the upstream server for resolution.\n"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Order when presented with other excluded names in the web interface\n"
+                }
+            },
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "language": {
+                "nodejs": {
+                    "requiredOutputs": [
+                        "id",
+                        "name",
+                        "order"
+                    ]
+                }
+            }
+        },
+        "bowtie:index/DnsServer:DnsServer": {
+            "properties": {
+                "addr": {
+                    "type": "string",
+                    "description": "The IP address for this DNS server.\n"
+                },
+                "id": {
+                    "type": "string",
+                    "description": "Internal resource ID.\n"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "The order for this DNS server.\n"
+                }
+            },
+            "type": "object",
+            "required": [
+                "addr"
+            ],
+            "language": {
+                "nodejs": {
+                    "requiredOutputs": [
+                        "addr",
+                        "id",
+                        "order"
+                    ]
+                }
+            }
+        },
+        "bowtie:index/PolicySource:PolicySource": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAnd:PolicySourceAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "id": {
+                    "type": "string",
+                    "description": "Internal identifier of the source predicate. Assigned by the provider.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNor:PolicySourceNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOr:PolicySourceOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object",
+            "language": {
+                "nodejs": {
+                    "requiredOutputs": [
+                        "id"
+                    ]
+                }
+            }
+        },
+        "bowtie:index/PolicySourceAnd:PolicySourceAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndAnd:PolicySourceAndAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndNor:PolicySourceAndNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndOr:PolicySourceAndOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndAnd:PolicySourceAndAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndAndAnd:PolicySourceAndAndAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndAndNor:PolicySourceAndAndNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndAndOr:PolicySourceAndAndOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndAndAnd:PolicySourceAndAndAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndAndNor:PolicySourceAndAndNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndAndOr:PolicySourceAndAndOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndNor:PolicySourceAndNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndNorAnd:PolicySourceAndNorAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndNorNor:PolicySourceAndNorNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndNorOr:PolicySourceAndNorOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndNorAnd:PolicySourceAndNorAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndNorNor:PolicySourceAndNorNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndNorOr:PolicySourceAndNorOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndOr:PolicySourceAndOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndOrAnd:PolicySourceAndOrAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndOrNor:PolicySourceAndOrNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceAndOrOr:PolicySourceAndOrOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndOrAnd:PolicySourceAndOrAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndOrNor:PolicySourceAndOrNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceAndOrOr:PolicySourceAndOrOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNor:PolicySourceNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorAnd:PolicySourceNorAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorNor:PolicySourceNorNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorOr:PolicySourceNorOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorAnd:PolicySourceNorAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorAndAnd:PolicySourceNorAndAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorAndNor:PolicySourceNorAndNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorAndOr:PolicySourceNorAndOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorAndAnd:PolicySourceNorAndAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorAndNor:PolicySourceNorAndNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorAndOr:PolicySourceNorAndOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorNor:PolicySourceNorNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorNorAnd:PolicySourceNorNorAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorNorNor:PolicySourceNorNorNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorNorOr:PolicySourceNorNorOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorNorAnd:PolicySourceNorNorAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorNorNor:PolicySourceNorNorNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorNorOr:PolicySourceNorNorOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorOr:PolicySourceNorOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorOrAnd:PolicySourceNorOrAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorOrNor:PolicySourceNorOrNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceNorOrOr:PolicySourceNorOrOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorOrAnd:PolicySourceNorOrAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorOrNor:PolicySourceNorOrNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceNorOrOr:PolicySourceNorOrOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOr:PolicySourceOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrAnd:PolicySourceOrAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrNor:PolicySourceOrNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrOr:PolicySourceOrOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrAnd:PolicySourceOrAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrAndAnd:PolicySourceOrAndAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrAndNor:PolicySourceOrAndNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrAndOr:PolicySourceOrAndOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrAndAnd:PolicySourceOrAndAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrAndNor:PolicySourceOrAndNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrAndOr:PolicySourceOrAndOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrNor:PolicySourceOrNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrNorAnd:PolicySourceOrNorAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrNorNor:PolicySourceOrNorNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrNorOr:PolicySourceOrNorOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrNorAnd:PolicySourceOrNorAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrNorNor:PolicySourceOrNorNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrNorOr:PolicySourceOrNorOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrOr:PolicySourceOrOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "ands": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrOrAnd:PolicySourceOrOrAnd"
+                    },
+                    "description": "Match if all of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "nors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrOrNor:PolicySourceOrOrNor"
+                    },
+                    "description": "Match if none of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "ors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/PolicySourceOrOrOr:PolicySourceOrOrOr"
+                    },
+                    "description": "Match if at least one of the listed operands match. Each operand is a single matcher or a further and/or/nor group.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrOrAnd:PolicySourceOrOrAnd": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrOrNor:PolicySourceOrOrNor": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/PolicySourceOrOrOr:PolicySourceOrOrOr": {
+            "properties": {
+                "always": {
+                    "type": "boolean",
+                    "description": "Match every device, authenticated or not.\n"
+                },
+                "authenticatedUser": {
+                    "type": "boolean",
+                    "description": "Match any device attached to an authenticated user.\n"
+                },
+                "device": {
+                    "type": "string",
+                    "description": "Match a single device by ID.\n"
+                },
+                "deviceGroup": {
+                    "type": "string",
+                    "description": "Match any device in the device group with this ID.\n"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Match a single user by ID.\n"
+                },
+                "userGroup": {
+                    "type": "string",
+                    "description": "Match any user in the user group with this ID.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/ResourceLocation:ResourceLocation": {
+            "properties": {
+                "cidr": {
+                    "type": "string",
+                    "description": "A CIDR address reachable from behind your Bowtie Controller.\n"
+                },
+                "collection": {
+                    "type": "string",
+                    "description": "The ID of a collection whose members this resource should match. Requires the default tagged location format.\n"
+                },
+                "dns": {
+                    "type": "string",
+                    "description": "A DNS name pointing to a resource reachable from behind your Bowtie Controller.\n"
+                },
+                "ip": {
+                    "type": "string",
+                    "description": "The IP address of a resource reachable from behind your Bowtie Controller.\n"
+                }
+            },
+            "type": "object"
+        },
+        "bowtie:index/ResourcePorts:ResourcePorts": {
+            "properties": {
+                "collections": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "List of allowed ports.\n"
+                },
+                "ranges": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "description": "First element is the low port and second is the high port (range is inclusive).\n"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "provider": {
+        "description": "The provider type for the bowtie package. By default, resources use package-wide configuration\nsettings, however an explicit `Provider` instance may be created and passed during resource\nconstruction to achieve fine-grained programmatic control over provider settings. See the\n[documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.\n",
+        "properties": {
+            "caBundle": {
+                "type": "string",
+                "description": "A PEM-encoded CA bundle (inline contents or a path to a file) used to verify the Controller's TLS certificate, for\nControllers issued by a private certificate authority. Honors the `BOWTIE_CA_BUNDLE` environment variable if set.\n"
+            },
+            "host": {
+                "type": "string",
+                "description": "The Bowtie HTTP Controller endpoint. Honors the `BOWTIE_HOST` environment variable if set. Example:\n`https://bowtie.example.com`\n"
+            },
+            "insecure": {
+                "type": "boolean",
+                "description": "Skip TLS certificate verification when connecting to the Controller. Honors the `BOWTIE_INSECURE` environment variable\nif set. Intended for development controllers with self-signed certificates; do not enable against production.\n"
+            },
+            "lazyAuthentication": {
+                "type": "boolean"
+            },
+            "password": {
+                "type": "string",
+                "secret": true
+            },
+            "taggedLocations": {
+                "type": "boolean",
+                "description": "Control whether the provider will send policy resource locations using the new tagged type format or legacy format.\n"
+            },
+            "username": {
+                "type": "string"
+            }
+        },
+        "inputProperties": {
+            "caBundle": {
+                "type": "string",
+                "description": "A PEM-encoded CA bundle (inline contents or a path to a file) used to verify the Controller's TLS certificate, for\nControllers issued by a private certificate authority. Honors the `BOWTIE_CA_BUNDLE` environment variable if set.\n"
+            },
+            "host": {
+                "type": "string",
+                "description": "The Bowtie HTTP Controller endpoint. Honors the `BOWTIE_HOST` environment variable if set. Example:\n`https://bowtie.example.com`\n"
+            },
+            "insecure": {
+                "type": "boolean",
+                "description": "Skip TLS certificate verification when connecting to the Controller. Honors the `BOWTIE_INSECURE` environment variable\nif set. Intended for development controllers with self-signed certificates; do not enable against production.\n"
+            },
+            "lazyAuthentication": {
+                "type": "boolean"
+            },
+            "password": {
+                "type": "string",
+                "secret": true
+            },
+            "taggedLocations": {
+                "type": "boolean",
+                "description": "Control whether the provider will send policy resource locations using the new tagged type format or legacy format.\n"
+            },
+            "username": {
+                "type": "string"
+            }
+        }
+    },
+    "resources": {
+        "bowtie:index/collection:Collection": {
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "An optional description of the collection.\n"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/CollectionMember:CollectionMember"
+                    },
+                    "description": "The locations contained in this collection.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the collection.\n"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "inputProperties": {
+                "description": {
+                    "type": "string",
+                    "description": "An optional description of the collection.\n"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/CollectionMember:CollectionMember"
+                    },
+                    "description": "The locations contained in this collection.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the collection.\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Collection resources.\n",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "An optional description of the collection.\n"
+                    },
+                    "members": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/types/bowtie:index/CollectionMember:CollectionMember"
+                        },
+                        "description": "The locations contained in this collection.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name of the collection.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/controller:Controller": {
+            "properties": {
+                "allowTemporaryConsoleUsers": {
+                    "type": "boolean",
+                    "description": "Whether temporary console users may be created on this Controller.\n"
+                },
+                "canUseIdp": {
+                    "type": "boolean",
+                    "description": "Whether this Controller may use the identity provider.\n"
+                },
+                "canUsePublicHttps": {
+                    "type": "boolean",
+                    "description": "Whether this Controller may serve public HTTPS.\n"
+                },
+                "canUseVanityDomain": {
+                    "type": "boolean",
+                    "description": "Whether this Controller may use a vanity domain.\n"
+                },
+                "currentVersion": {
+                    "type": "string",
+                    "description": "The software version the Controller is currently running.\n"
+                },
+                "httpsEndpoint": {
+                    "type": "string",
+                    "description": "The Controller's HTTPS endpoint.\n"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "persistentKeepalive": {
+                    "type": "integer",
+                    "description": "Keepalive interval, in seconds, advertised to peers.\n"
+                },
+                "publicAddress": {
+                    "type": "string",
+                    "description": "The publicly reachable address clients and other Controllers use to reach this Controller.\n"
+                },
+                "publicKey": {
+                    "type": "string",
+                    "description": "The Controller's VPN public key.\n"
+                },
+                "siteId": {
+                    "type": "string",
+                    "description": "The site this Controller belongs to.\n"
+                },
+                "sshListener": {
+                    "type": "string",
+                    "description": "Where the Controller accepts SSH: `any`, `local-only`, or `tunnel-only`.\n"
+                },
+                "trackPolicyVerdictLogs": {
+                    "type": "boolean",
+                    "description": "Emit per-packet policy verdict logs.\n"
+                },
+                "trackPolicyVerdictMetrics": {
+                    "type": "boolean",
+                    "description": "Record per-packet policy verdict metrics.\n"
+                },
+                "versionIncludePrereleases": {
+                    "type": "boolean",
+                    "description": "Consider pre-release versions when selecting updates. Unset falls back to the organization default.\n"
+                },
+                "versionMinimumAge": {
+                    "type": "integer",
+                    "description": "Minimum age, in days, a release must have before this Controller adopts it under a latest-version strategy. Unset falls\nback to the organization default.\n"
+                },
+                "versionStrategySplayType": {
+                    "type": "string",
+                    "description": "Spreads update times across a fleet. One of `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.\n"
+                },
+                "versionStrategySplayValue": {
+                    "type": "string",
+                    "description": "A systemd time-span used by `randomized-delay` and `consistent-randomized-delay`.\n"
+                },
+                "versionStrategyType": {
+                    "type": "string",
+                    "description": "How this Controller chooses update versions. One of `org-default`, `manual`, `specific`, `newest-at-interval`, or\n`newest-at-calendar`. This is the upgrade orchestration control.\n"
+                },
+                "versionStrategyValue": {
+                    "type": "string",
+                    "description": "The value for `version_strategy_type` when it requires one: a version string for `specific`, a systemd time-span for\n`newest-at-interval`, or a systemd calendar expression for `newest-at-calendar`. Leave unset for `org-default` and\n`manual`.\n"
+                },
+                "webFilterTrustedProxyCollection": {
+                    "type": "string",
+                    "description": "A collection ID used as the web-filter trusted proxy list for this Controller.\n"
+                },
+                "wireguardPort": {
+                    "type": "integer",
+                    "description": "The UDP port the Controller listens on for VPN connections.\n"
+                },
+                "wireguardStrategy": {
+                    "type": "string",
+                    "description": "How the VPN port is reached: `static` (publicly reachable) or `dynamic` (privately reachable or NAT-punched).\n"
+                }
+            },
+            "required": [
+                "allowTemporaryConsoleUsers",
+                "canUseIdp",
+                "canUsePublicHttps",
+                "canUseVanityDomain",
+                "currentVersion",
+                "httpsEndpoint",
+                "lastUpdated",
+                "persistentKeepalive",
+                "publicAddress",
+                "publicKey",
+                "siteId",
+                "sshListener",
+                "trackPolicyVerdictLogs",
+                "trackPolicyVerdictMetrics",
+                "versionIncludePrereleases",
+                "versionMinimumAge",
+                "versionStrategySplayType",
+                "versionStrategySplayValue",
+                "versionStrategyType",
+                "versionStrategyValue",
+                "webFilterTrustedProxyCollection",
+                "wireguardPort",
+                "wireguardStrategy"
+            ],
+            "inputProperties": {
+                "allowTemporaryConsoleUsers": {
+                    "type": "boolean",
+                    "description": "Whether temporary console users may be created on this Controller.\n"
+                },
+                "canUseIdp": {
+                    "type": "boolean",
+                    "description": "Whether this Controller may use the identity provider.\n"
+                },
+                "canUsePublicHttps": {
+                    "type": "boolean",
+                    "description": "Whether this Controller may serve public HTTPS.\n"
+                },
+                "canUseVanityDomain": {
+                    "type": "boolean",
+                    "description": "Whether this Controller may use a vanity domain.\n"
+                },
+                "persistentKeepalive": {
+                    "type": "integer",
+                    "description": "Keepalive interval, in seconds, advertised to peers.\n"
+                },
+                "publicAddress": {
+                    "type": "string",
+                    "description": "The publicly reachable address clients and other Controllers use to reach this Controller.\n"
+                },
+                "siteId": {
+                    "type": "string",
+                    "description": "The site this Controller belongs to.\n"
+                },
+                "sshListener": {
+                    "type": "string",
+                    "description": "Where the Controller accepts SSH: `any`, `local-only`, or `tunnel-only`.\n"
+                },
+                "trackPolicyVerdictLogs": {
+                    "type": "boolean",
+                    "description": "Emit per-packet policy verdict logs.\n"
+                },
+                "trackPolicyVerdictMetrics": {
+                    "type": "boolean",
+                    "description": "Record per-packet policy verdict metrics.\n"
+                },
+                "versionIncludePrereleases": {
+                    "type": "boolean",
+                    "description": "Consider pre-release versions when selecting updates. Unset falls back to the organization default.\n"
+                },
+                "versionMinimumAge": {
+                    "type": "integer",
+                    "description": "Minimum age, in days, a release must have before this Controller adopts it under a latest-version strategy. Unset falls\nback to the organization default.\n"
+                },
+                "versionStrategySplayType": {
+                    "type": "string",
+                    "description": "Spreads update times across a fleet. One of `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.\n"
+                },
+                "versionStrategySplayValue": {
+                    "type": "string",
+                    "description": "A systemd time-span used by `randomized-delay` and `consistent-randomized-delay`.\n"
+                },
+                "versionStrategyType": {
+                    "type": "string",
+                    "description": "How this Controller chooses update versions. One of `org-default`, `manual`, `specific`, `newest-at-interval`, or\n`newest-at-calendar`. This is the upgrade orchestration control.\n"
+                },
+                "versionStrategyValue": {
+                    "type": "string",
+                    "description": "The value for `version_strategy_type` when it requires one: a version string for `specific`, a systemd time-span for\n`newest-at-interval`, or a systemd calendar expression for `newest-at-calendar`. Leave unset for `org-default` and\n`manual`.\n"
+                },
+                "webFilterTrustedProxyCollection": {
+                    "type": "string",
+                    "description": "A collection ID used as the web-filter trusted proxy list for this Controller.\n"
+                },
+                "wireguardPort": {
+                    "type": "integer",
+                    "description": "The UDP port the Controller listens on for VPN connections.\n"
+                },
+                "wireguardStrategy": {
+                    "type": "string",
+                    "description": "How the VPN port is reached: `static` (publicly reachable) or `dynamic` (privately reachable or NAT-punched).\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Controller resources.\n",
+                "properties": {
+                    "allowTemporaryConsoleUsers": {
+                        "type": "boolean",
+                        "description": "Whether temporary console users may be created on this Controller.\n"
+                    },
+                    "canUseIdp": {
+                        "type": "boolean",
+                        "description": "Whether this Controller may use the identity provider.\n"
+                    },
+                    "canUsePublicHttps": {
+                        "type": "boolean",
+                        "description": "Whether this Controller may serve public HTTPS.\n"
+                    },
+                    "canUseVanityDomain": {
+                        "type": "boolean",
+                        "description": "Whether this Controller may use a vanity domain.\n"
+                    },
+                    "currentVersion": {
+                        "type": "string",
+                        "description": "The software version the Controller is currently running.\n"
+                    },
+                    "httpsEndpoint": {
+                        "type": "string",
+                        "description": "The Controller's HTTPS endpoint.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "persistentKeepalive": {
+                        "type": "integer",
+                        "description": "Keepalive interval, in seconds, advertised to peers.\n"
+                    },
+                    "publicAddress": {
+                        "type": "string",
+                        "description": "The publicly reachable address clients and other Controllers use to reach this Controller.\n"
+                    },
+                    "publicKey": {
+                        "type": "string",
+                        "description": "The Controller's VPN public key.\n"
+                    },
+                    "siteId": {
+                        "type": "string",
+                        "description": "The site this Controller belongs to.\n"
+                    },
+                    "sshListener": {
+                        "type": "string",
+                        "description": "Where the Controller accepts SSH: `any`, `local-only`, or `tunnel-only`.\n"
+                    },
+                    "trackPolicyVerdictLogs": {
+                        "type": "boolean",
+                        "description": "Emit per-packet policy verdict logs.\n"
+                    },
+                    "trackPolicyVerdictMetrics": {
+                        "type": "boolean",
+                        "description": "Record per-packet policy verdict metrics.\n"
+                    },
+                    "versionIncludePrereleases": {
+                        "type": "boolean",
+                        "description": "Consider pre-release versions when selecting updates. Unset falls back to the organization default.\n"
+                    },
+                    "versionMinimumAge": {
+                        "type": "integer",
+                        "description": "Minimum age, in days, a release must have before this Controller adopts it under a latest-version strategy. Unset falls\nback to the organization default.\n"
+                    },
+                    "versionStrategySplayType": {
+                        "type": "string",
+                        "description": "Spreads update times across a fleet. One of `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.\n"
+                    },
+                    "versionStrategySplayValue": {
+                        "type": "string",
+                        "description": "A systemd time-span used by `randomized-delay` and `consistent-randomized-delay`.\n"
+                    },
+                    "versionStrategyType": {
+                        "type": "string",
+                        "description": "How this Controller chooses update versions. One of `org-default`, `manual`, `specific`, `newest-at-interval`, or\n`newest-at-calendar`. This is the upgrade orchestration control.\n"
+                    },
+                    "versionStrategyValue": {
+                        "type": "string",
+                        "description": "The value for `version_strategy_type` when it requires one: a version string for `specific`, a systemd time-span for\n`newest-at-interval`, or a systemd calendar expression for `newest-at-calendar`. Leave unset for `org-default` and\n`manual`.\n"
+                    },
+                    "webFilterTrustedProxyCollection": {
+                        "type": "string",
+                        "description": "A collection ID used as the web-filter trusted proxy list for this Controller.\n"
+                    },
+                    "wireguardPort": {
+                        "type": "integer",
+                        "description": "The UDP port the Controller listens on for VPN connections.\n"
+                    },
+                    "wireguardStrategy": {
+                        "type": "string",
+                        "description": "How the VPN port is reached: `static` (publicly reachable) or `dynamic` (privately reachable or NAT-punched).\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/deviceGroup:DeviceGroup": {
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "An optional description of the device group.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the device group.\n"
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "inputProperties": {
+                "description": {
+                    "type": "string",
+                    "description": "An optional description of the device group.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the device group.\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering DeviceGroup resources.\n",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "An optional description of the device group.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name of the device group.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/dns:Dns": {
+            "properties": {
+                "excludes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/DnsExclude:DnsExclude"
+                    },
+                    "description": "Names under this domain to exclude from resolution.\n"
+                },
+                "includeOnlySites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Limit name resolution for this domain only to these sites.\n"
+                },
+                "isCounted": {
+                    "type": "boolean",
+                    "description": "Whether to only log metrics for this domain and not all requests.\n"
+                },
+                "isDns64": {
+                    "type": "boolean",
+                    "description": "Whether to resolve names using DNS64.\n"
+                },
+                "isDropA": {
+                    "type": "boolean",
+                    "description": "Whether to drop A record responses from requests for this domain.\n"
+                },
+                "isDropAll": {
+                    "type": "boolean",
+                    "description": "Whether all record responses for this domain should be dropped.\n"
+                },
+                "isLog": {
+                    "type": "boolean",
+                    "description": "Whether to log all requests for names in this domain.\n"
+                },
+                "isSearchDomain": {
+                    "type": "boolean",
+                    "description": "Whether this domain should be treated as a search domain.\n"
+                },
+                "lastUpdated": {
+                    "type": "string",
+                    "description": "Metadata about the last time a write API was called by this provider for this resource.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The DNS zone name you wish to target. Example: `example.com`\n"
+                },
+                "servers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/DnsServer:DnsServer"
+                    },
+                    "description": "Provider Metadata storing extra API data about the upstream servers for this domain\n"
+                }
+            },
+            "required": [
+                "isCounted",
+                "isDns64",
+                "isDropA",
+                "isDropAll",
+                "isLog",
+                "isSearchDomain",
+                "lastUpdated",
+                "name",
+                "servers"
+            ],
+            "inputProperties": {
+                "excludes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/DnsExclude:DnsExclude"
+                    },
+                    "description": "Names under this domain to exclude from resolution.\n"
+                },
+                "includeOnlySites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Limit name resolution for this domain only to these sites.\n"
+                },
+                "isCounted": {
+                    "type": "boolean",
+                    "description": "Whether to only log metrics for this domain and not all requests.\n"
+                },
+                "isDns64": {
+                    "type": "boolean",
+                    "description": "Whether to resolve names using DNS64.\n"
+                },
+                "isDropA": {
+                    "type": "boolean",
+                    "description": "Whether to drop A record responses from requests for this domain.\n"
+                },
+                "isDropAll": {
+                    "type": "boolean",
+                    "description": "Whether all record responses for this domain should be dropped.\n"
+                },
+                "isLog": {
+                    "type": "boolean",
+                    "description": "Whether to log all requests for names in this domain.\n"
+                },
+                "isSearchDomain": {
+                    "type": "boolean",
+                    "description": "Whether this domain should be treated as a search domain.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The DNS zone name you wish to target. Example: `example.com`\n"
+                },
+                "servers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/types/bowtie:index/DnsServer:DnsServer"
+                    },
+                    "description": "Provider Metadata storing extra API data about the upstream servers for this domain\n"
+                }
+            },
+            "requiredInputs": [
+                "servers"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Dns resources.\n",
+                "properties": {
+                    "excludes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/types/bowtie:index/DnsExclude:DnsExclude"
+                        },
+                        "description": "Names under this domain to exclude from resolution.\n"
+                    },
+                    "includeOnlySites": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Limit name resolution for this domain only to these sites.\n"
+                    },
+                    "isCounted": {
+                        "type": "boolean",
+                        "description": "Whether to only log metrics for this domain and not all requests.\n"
+                    },
+                    "isDns64": {
+                        "type": "boolean",
+                        "description": "Whether to resolve names using DNS64.\n"
+                    },
+                    "isDropA": {
+                        "type": "boolean",
+                        "description": "Whether to drop A record responses from requests for this domain.\n"
+                    },
+                    "isDropAll": {
+                        "type": "boolean",
+                        "description": "Whether all record responses for this domain should be dropped.\n"
+                    },
+                    "isLog": {
+                        "type": "boolean",
+                        "description": "Whether to log all requests for names in this domain.\n"
+                    },
+                    "isSearchDomain": {
+                        "type": "boolean",
+                        "description": "Whether this domain should be treated as a search domain.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string",
+                        "description": "Metadata about the last time a write API was called by this provider for this resource.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The DNS zone name you wish to target. Example: `example.com`\n"
+                    },
+                    "servers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/types/bowtie:index/DnsServer:DnsServer"
+                        },
+                        "description": "Provider Metadata storing extra API data about the upstream servers for this domain\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/dnsBlockList:DnsBlockList": {
+            "properties": {
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the block list.\n"
+                },
+                "overrideToAllows": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Optional list of DNS names to exclude from any retrieved DNS block lists.\n"
+                },
+                "upstream": {
+                    "type": "string",
+                    "description": "An upstream URL that returns a DNS block list.\n"
+                }
+            },
+            "required": [
+                "lastUpdated",
+                "name"
+            ],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the block list.\n"
+                },
+                "overrideToAllows": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Optional list of DNS names to exclude from any retrieved DNS block lists.\n"
+                },
+                "upstream": {
+                    "type": "string",
+                    "description": "An upstream URL that returns a DNS block list.\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering DnsBlockList resources.\n",
+                "properties": {
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name of the block list.\n"
+                    },
+                    "overrideToAllows": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Optional list of DNS names to exclude from any retrieved DNS block lists.\n"
+                    },
+                    "upstream": {
+                        "type": "string",
+                        "description": "An upstream URL that returns a DNS block list.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/group:Group": {
+            "properties": {
+                "lastUpdated": {
+                    "type": "string",
+                    "description": "Metadata about the last time a write API was called by this provider for this resource.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human-readable name of the group.\n"
+                }
+            },
+            "required": [
+                "lastUpdated",
+                "name"
+            ],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "The human-readable name of the group.\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Group resources.\n",
+                "properties": {
+                    "lastUpdated": {
+                        "type": "string",
+                        "description": "Metadata about the last time a write API was called by this provider for this resource.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human-readable name of the group.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/groupMembership:GroupMembership": {
+            "properties": {
+                "groupId": {
+                    "type": "string",
+                    "description": "Internal resource ID.\n"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of users to grant membership to the group. This resource accepts both `user_ids` and emails. Will completely\noverwrite membership on apply.\n"
+                }
+            },
+            "required": [
+                "groupId",
+                "users"
+            ],
+            "inputProperties": {
+                "groupId": {
+                    "type": "string",
+                    "description": "Internal resource ID.\n"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of users to grant membership to the group. This resource accepts both `user_ids` and emails. Will completely\noverwrite membership on apply.\n"
+                }
+            },
+            "requiredInputs": [
+                "groupId",
+                "users"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering GroupMembership resources.\n",
+                "properties": {
+                    "groupId": {
+                        "type": "string",
+                        "description": "Internal resource ID.\n"
+                    },
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The list of users to grant membership to the group. This resource accepts both `user_ids` and emails. Will completely\noverwrite membership on apply.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/ipv4Range:Ipv4Range": {
+            "properties": {
+                "assignAddressesFromHere": {
+                    "type": "string",
+                    "description": "Address assignment strategy: `never`, `on-demand-assign-random`, or `always-assign-random`.\n"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "range": {
+                    "type": "string",
+                    "description": "The IPv4 CIDR for the pool, for example `192.0.2.0/24`.\n"
+                },
+                "skipFirstNAddresses": {
+                    "type": "integer",
+                    "description": "Number of addresses to skip at the start of the range before assigning.\n"
+                }
+            },
+            "required": [
+                "assignAddressesFromHere",
+                "lastUpdated",
+                "range",
+                "skipFirstNAddresses"
+            ],
+            "inputProperties": {
+                "assignAddressesFromHere": {
+                    "type": "string",
+                    "description": "Address assignment strategy: `never`, `on-demand-assign-random`, or `always-assign-random`.\n"
+                },
+                "range": {
+                    "type": "string",
+                    "description": "The IPv4 CIDR for the pool, for example `192.0.2.0/24`.\n"
+                },
+                "skipFirstNAddresses": {
+                    "type": "integer",
+                    "description": "Number of addresses to skip at the start of the range before assigning.\n"
+                }
+            },
+            "requiredInputs": [
+                "assignAddressesFromHere",
+                "range"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Ipv4Range resources.\n",
+                "properties": {
+                    "assignAddressesFromHere": {
+                        "type": "string",
+                        "description": "Address assignment strategy: `never`, `on-demand-assign-random`, or `always-assign-random`.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "range": {
+                        "type": "string",
+                        "description": "The IPv4 CIDR for the pool, for example `192.0.2.0/24`.\n"
+                    },
+                    "skipFirstNAddresses": {
+                        "type": "integer",
+                        "description": "Number of addresses to skip at the start of the range before assigning.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/ipv6Range:Ipv6Range": {
+            "properties": {
+                "assignAddressesFromHere": {
+                    "type": "boolean",
+                    "description": "Whether the Controller assigns addresses to devices from this pool.\n"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "range": {
+                    "type": "string",
+                    "description": "The IPv6 CIDR for the pool, for example `fd00:1:1:5678::/64`. Generated by the Controller when unset.\n"
+                }
+            },
+            "required": [
+                "assignAddressesFromHere",
+                "lastUpdated",
+                "range"
+            ],
+            "inputProperties": {
+                "assignAddressesFromHere": {
+                    "type": "boolean",
+                    "description": "Whether the Controller assigns addresses to devices from this pool.\n"
+                },
+                "range": {
+                    "type": "string",
+                    "description": "The IPv6 CIDR for the pool, for example `fd00:1:1:5678::/64`. Generated by the Controller when unset.\n"
+                }
+            },
+            "requiredInputs": [
+                "assignAddressesFromHere"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Ipv6Range resources.\n",
+                "properties": {
+                    "assignAddressesFromHere": {
+                        "type": "boolean",
+                        "description": "Whether the Controller assigns addresses to devices from this pool.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "range": {
+                        "type": "string",
+                        "description": "The IPv6 CIDR for the pool, for example `fd00:1:1:5678::/64`. Generated by the Controller when unset.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/orgConfig:OrgConfig": {
+            "properties": {
+                "allowControllerApprovalWithPskOnly": {
+                    "type": "boolean",
+                    "description": "Automatically admit a Controller that presents a valid pre-shared key, for zero-touch cluster scale-out.\n"
+                },
+                "allowDeviceApprovalOnUserAuth": {
+                    "type": "boolean",
+                    "description": "Automatically approve a device when its user authenticates after installing the client.\n"
+                },
+                "controllerSshListener": {
+                    "type": "string",
+                    "description": "Organization default for how Controllers listen on the SSH port: `any`, `local-only`, or `tunnel-only`.\n"
+                },
+                "controllerVersionIncludePrereleases": {
+                    "type": "boolean",
+                    "description": "Default for considering pre-release versions when Controllers do not specify their own value.\n"
+                },
+                "controllerVersionMinimumAge": {
+                    "type": "integer",
+                    "description": "Default minimum age, in days, a release must have before adoption under a latest-version strategy.\n"
+                },
+                "controllerVersionSplayType": {
+                    "type": "string",
+                    "description": "Organization default update stagger: `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.\n"
+                },
+                "controllerVersionSplayValue": {
+                    "type": "string",
+                    "description": "A systemd time-span for `randomized-delay` and `consistent-randomized-delay`.\n"
+                },
+                "controllerVersionStrategyType": {
+                    "type": "string",
+                    "description": "Organization default update strategy: `manual`, `specific`, `newest-at-interval`, or `newest-at-calendar`.\n(`org-default` is not valid here; the organization default cannot itself defer to the organization default.)\n"
+                },
+                "controllerVersionStrategyValue": {
+                    "type": "string",
+                    "description": "Value for the default update strategy when it requires one (a version, time-span, or calendar expression).\n"
+                },
+                "deleteDevicesMoreStaleThanDays": {
+                    "type": "integer",
+                    "description": "Delete devices that have not checked in for more than this many days. Must be greater than 7.\n"
+                },
+                "disablePeersRequireQuorum": {
+                    "type": "boolean",
+                    "description": "When false, destructive device cleanup only proceeds when a quorum of Controller peers is connected.\n"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "peersRequireQuorumPercentage": {
+                    "type": "integer",
+                    "description": "Percentage (0-100) of Controller peers required for quorum. Default 51.\n"
+                },
+                "removeApprovalDevicesMoreStaleThanDays": {
+                    "type": "integer",
+                    "description": "Revoke approval for devices that have not checked in for more than this many days. Must be greater than 7.\n"
+                },
+                "userDeviceDisassociationMinutes": {
+                    "type": "integer",
+                    "description": "Disassociate a device from its user after this many minutes.\n"
+                }
+            },
+            "required": [
+                "allowControllerApprovalWithPskOnly",
+                "allowDeviceApprovalOnUserAuth",
+                "controllerSshListener",
+                "controllerVersionIncludePrereleases",
+                "controllerVersionMinimumAge",
+                "controllerVersionSplayType",
+                "controllerVersionSplayValue",
+                "controllerVersionStrategyType",
+                "controllerVersionStrategyValue",
+                "deleteDevicesMoreStaleThanDays",
+                "disablePeersRequireQuorum",
+                "lastUpdated",
+                "peersRequireQuorumPercentage",
+                "removeApprovalDevicesMoreStaleThanDays",
+                "userDeviceDisassociationMinutes"
+            ],
+            "inputProperties": {
+                "allowControllerApprovalWithPskOnly": {
+                    "type": "boolean",
+                    "description": "Automatically admit a Controller that presents a valid pre-shared key, for zero-touch cluster scale-out.\n"
+                },
+                "allowDeviceApprovalOnUserAuth": {
+                    "type": "boolean",
+                    "description": "Automatically approve a device when its user authenticates after installing the client.\n"
+                },
+                "controllerSshListener": {
+                    "type": "string",
+                    "description": "Organization default for how Controllers listen on the SSH port: `any`, `local-only`, or `tunnel-only`.\n"
+                },
+                "controllerVersionIncludePrereleases": {
+                    "type": "boolean",
+                    "description": "Default for considering pre-release versions when Controllers do not specify their own value.\n"
+                },
+                "controllerVersionMinimumAge": {
+                    "type": "integer",
+                    "description": "Default minimum age, in days, a release must have before adoption under a latest-version strategy.\n"
+                },
+                "controllerVersionSplayType": {
+                    "type": "string",
+                    "description": "Organization default update stagger: `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.\n"
+                },
+                "controllerVersionSplayValue": {
+                    "type": "string",
+                    "description": "A systemd time-span for `randomized-delay` and `consistent-randomized-delay`.\n"
+                },
+                "controllerVersionStrategyType": {
+                    "type": "string",
+                    "description": "Organization default update strategy: `manual`, `specific`, `newest-at-interval`, or `newest-at-calendar`.\n(`org-default` is not valid here; the organization default cannot itself defer to the organization default.)\n"
+                },
+                "controllerVersionStrategyValue": {
+                    "type": "string",
+                    "description": "Value for the default update strategy when it requires one (a version, time-span, or calendar expression).\n"
+                },
+                "deleteDevicesMoreStaleThanDays": {
+                    "type": "integer",
+                    "description": "Delete devices that have not checked in for more than this many days. Must be greater than 7.\n"
+                },
+                "disablePeersRequireQuorum": {
+                    "type": "boolean",
+                    "description": "When false, destructive device cleanup only proceeds when a quorum of Controller peers is connected.\n"
+                },
+                "peersRequireQuorumPercentage": {
+                    "type": "integer",
+                    "description": "Percentage (0-100) of Controller peers required for quorum. Default 51.\n"
+                },
+                "removeApprovalDevicesMoreStaleThanDays": {
+                    "type": "integer",
+                    "description": "Revoke approval for devices that have not checked in for more than this many days. Must be greater than 7.\n"
+                },
+                "userDeviceDisassociationMinutes": {
+                    "type": "integer",
+                    "description": "Disassociate a device from its user after this many minutes.\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering OrgConfig resources.\n",
+                "properties": {
+                    "allowControllerApprovalWithPskOnly": {
+                        "type": "boolean",
+                        "description": "Automatically admit a Controller that presents a valid pre-shared key, for zero-touch cluster scale-out.\n"
+                    },
+                    "allowDeviceApprovalOnUserAuth": {
+                        "type": "boolean",
+                        "description": "Automatically approve a device when its user authenticates after installing the client.\n"
+                    },
+                    "controllerSshListener": {
+                        "type": "string",
+                        "description": "Organization default for how Controllers listen on the SSH port: `any`, `local-only`, or `tunnel-only`.\n"
+                    },
+                    "controllerVersionIncludePrereleases": {
+                        "type": "boolean",
+                        "description": "Default for considering pre-release versions when Controllers do not specify their own value.\n"
+                    },
+                    "controllerVersionMinimumAge": {
+                        "type": "integer",
+                        "description": "Default minimum age, in days, a release must have before adoption under a latest-version strategy.\n"
+                    },
+                    "controllerVersionSplayType": {
+                        "type": "string",
+                        "description": "Organization default update stagger: `no-delay`, `randomized-delay`, or `consistent-randomized-delay`.\n"
+                    },
+                    "controllerVersionSplayValue": {
+                        "type": "string",
+                        "description": "A systemd time-span for `randomized-delay` and `consistent-randomized-delay`.\n"
+                    },
+                    "controllerVersionStrategyType": {
+                        "type": "string",
+                        "description": "Organization default update strategy: `manual`, `specific`, `newest-at-interval`, or `newest-at-calendar`.\n(`org-default` is not valid here; the organization default cannot itself defer to the organization default.)\n"
+                    },
+                    "controllerVersionStrategyValue": {
+                        "type": "string",
+                        "description": "Value for the default update strategy when it requires one (a version, time-span, or calendar expression).\n"
+                    },
+                    "deleteDevicesMoreStaleThanDays": {
+                        "type": "integer",
+                        "description": "Delete devices that have not checked in for more than this many days. Must be greater than 7.\n"
+                    },
+                    "disablePeersRequireQuorum": {
+                        "type": "boolean",
+                        "description": "When false, destructive device cleanup only proceeds when a quorum of Controller peers is connected.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "peersRequireQuorumPercentage": {
+                        "type": "integer",
+                        "description": "Percentage (0-100) of Controller peers required for quorum. Default 51.\n"
+                    },
+                    "removeApprovalDevicesMoreStaleThanDays": {
+                        "type": "integer",
+                        "description": "Revoke approval for devices that have not checked in for more than this many days. Must be greater than 7.\n"
+                    },
+                    "userDeviceDisassociationMinutes": {
+                        "type": "integer",
+                        "description": "Disassociate a device from its user after this many minutes.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/organization:Organization": {
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Domain to associate with this organization.\n"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the organization.\n"
+                }
+            },
+            "required": [
+                "domain",
+                "lastUpdated",
+                "name"
+            ],
+            "inputProperties": {
+                "domain": {
+                    "type": "string",
+                    "description": "Domain to associate with this organization.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the organization.\n"
+                }
+            },
+            "requiredInputs": [
+                "domain"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Organization resources.\n",
+                "properties": {
+                    "domain": {
+                        "type": "string",
+                        "description": "Domain to associate with this organization.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name of the organization.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/policy:Policy": {
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "description": "The action to take on matching traffic: `Accept`, `Reject` (deny with feedback), or `Drop` (deny silently).\n"
+                },
+                "dest": {
+                    "type": "string",
+                    "description": "The ID of the resource group this policy controls access to.\n"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Evaluation order of the policy. When omitted, the Controller appends the policy to the end of the list.\n"
+                },
+                "source": {
+                    "$ref": "#/types/bowtie:index/PolicySource:PolicySource",
+                    "description": "The set of devices this policy applies to. Set exactly one of the leaf matchers (`always`, `authenticated_user`, `user`,\n`device`, `user_group`, `device_group`) or exactly one of the boolean groups (`and`, `or`, `nor`).\n"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Whether the policy is `Enabled` or `Disabled`. Defaults to `Enabled`.\n"
+                }
+            },
+            "required": [
+                "action",
+                "dest",
+                "order",
+                "source",
+                "status"
+            ],
+            "inputProperties": {
+                "action": {
+                    "type": "string",
+                    "description": "The action to take on matching traffic: `Accept`, `Reject` (deny with feedback), or `Drop` (deny silently).\n"
+                },
+                "dest": {
+                    "type": "string",
+                    "description": "The ID of the resource group this policy controls access to.\n"
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "Evaluation order of the policy. When omitted, the Controller appends the policy to the end of the list.\n"
+                },
+                "source": {
+                    "$ref": "#/types/bowtie:index/PolicySource:PolicySource",
+                    "description": "The set of devices this policy applies to. Set exactly one of the leaf matchers (`always`, `authenticated_user`, `user`,\n`device`, `user_group`, `device_group`) or exactly one of the boolean groups (`and`, `or`, `nor`).\n"
+                },
+                "status": {
+                    "type": "string",
+                    "description": "Whether the policy is `Enabled` or `Disabled`. Defaults to `Enabled`.\n"
+                }
+            },
+            "requiredInputs": [
+                "action",
+                "dest",
+                "source"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Policy resources.\n",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "description": "The action to take on matching traffic: `Accept`, `Reject` (deny with feedback), or `Drop` (deny silently).\n"
+                    },
+                    "dest": {
+                        "type": "string",
+                        "description": "The ID of the resource group this policy controls access to.\n"
+                    },
+                    "order": {
+                        "type": "integer",
+                        "description": "Evaluation order of the policy. When omitted, the Controller appends the policy to the end of the list.\n"
+                    },
+                    "source": {
+                        "$ref": "#/types/bowtie:index/PolicySource:PolicySource",
+                        "description": "The set of devices this policy applies to. Set exactly one of the leaf matchers (`always`, `authenticated_user`, `user`,\n`device`, `user_group`, `device_group`) or exactly one of the boolean groups (`and`, `or`, `nor`).\n"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Whether the policy is `Enabled` or `Disabled`. Defaults to `Enabled`.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/resource:Resource": {
+            "properties": {
+                "location": {
+                    "$ref": "#/types/bowtie:index/ResourceLocation:ResourceLocation",
+                    "description": "The address of the resource. May be a CIDR address, single IP, or DNS name.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human readable name of the resource.\n"
+                },
+                "ports": {
+                    "$ref": "#/types/bowtie:index/ResourcePorts:ResourcePorts",
+                    "description": "Which ports to include in this resource.\n"
+                },
+                "protocol": {
+                    "type": "string",
+                    "description": "Matching connection protocol.\n"
+                }
+            },
+            "required": [
+                "location",
+                "name",
+                "ports",
+                "protocol"
+            ],
+            "inputProperties": {
+                "location": {
+                    "$ref": "#/types/bowtie:index/ResourceLocation:ResourceLocation",
+                    "description": "The address of the resource. May be a CIDR address, single IP, or DNS name.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human readable name of the resource.\n"
+                },
+                "ports": {
+                    "$ref": "#/types/bowtie:index/ResourcePorts:ResourcePorts",
+                    "description": "Which ports to include in this resource.\n"
+                },
+                "protocol": {
+                    "type": "string",
+                    "description": "Matching connection protocol.\n"
+                }
+            },
+            "requiredInputs": [
+                "location",
+                "ports",
+                "protocol"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Resource resources.\n",
+                "properties": {
+                    "location": {
+                        "$ref": "#/types/bowtie:index/ResourceLocation:ResourceLocation",
+                        "description": "The address of the resource. May be a CIDR address, single IP, or DNS name.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Human readable name of the resource.\n"
+                    },
+                    "ports": {
+                        "$ref": "#/types/bowtie:index/ResourcePorts:ResourcePorts",
+                        "description": "Which ports to include in this resource.\n"
+                    },
+                    "protocol": {
+                        "type": "string",
+                        "description": "Matching connection protocol.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/resourceGroup:ResourceGroup": {
+            "properties": {
+                "inheriteds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of resource groups to include in this resource group\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name/description of the resource group.\n"
+                },
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The resources that should directly be included in this resource group\n"
+                }
+            },
+            "required": [
+                "inheriteds",
+                "name",
+                "resources"
+            ],
+            "inputProperties": {
+                "inheriteds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The list of resource groups to include in this resource group\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name/description of the resource group.\n"
+                },
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The resources that should directly be included in this resource group\n"
+                }
+            },
+            "requiredInputs": [
+                "inheriteds",
+                "resources"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering ResourceGroup resources.\n",
+                "properties": {
+                    "inheriteds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The list of resource groups to include in this resource group\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name/description of the resource group.\n"
+                    },
+                    "resources": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The resources that should directly be included in this resource group\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/routeExclusion:RouteExclusion": {
+            "properties": {
+                "applyStrategy": {
+                    "type": "string",
+                    "description": "Rollout strategy: `always`, `never` (staged but inactive), `percentage_user_match`, or `percentage_device_match`.\nDefaults to `always`.\n"
+                },
+                "applyStrategyPercentage": {
+                    "type": "integer",
+                    "description": "The match percentage (0-255, in ~0.5% increments) used when `apply_strategy` is `percentage_user_match` or\n`percentage_device_match`.\n"
+                },
+                "collectionId": {
+                    "type": "string",
+                    "description": "The ID of the collection whose CIDR members are excluded from the tunnel. The collection must already exist.\n"
+                },
+                "matchOnlyDeviceGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Apply only to devices in these device group IDs.\n"
+                },
+                "matchOnlyDeviceOs": {
+                    "type": "string",
+                    "description": "Apply only to devices with this OS: `windows`, `macos`, `linux`, `ios`, `android`, `chromeos`, `bowtie.Controller`, or\n`unknown`. Changing or removing this recreates the exclusion.\n"
+                },
+                "matchOnlyDeviceType": {
+                    "type": "string",
+                    "description": "Apply only to devices of this type: `laptop`, `desktop`, `mobile`, `server`, or `other`. Changing or removing this\nrecreates the exclusion.\n"
+                },
+                "matchOnlyOwnership": {
+                    "type": "string",
+                    "description": "Apply only to devices owned by this organization ID. Changing or removing this recreates the exclusion.\n"
+                },
+                "matchOnlyUserGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Apply only to devices whose user is in these user group IDs.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable name for the exclusion.\n"
+                },
+                "onlyIfWanMatchesCidrs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "If set, the exclusion only applies when the device's WAN IP falls within one of these CIDRs (for example, an office\nnetwork).\n"
+                },
+                "sites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The site IDs this exclusion applies to. Omit to apply to all sites.\n"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "A content hash of the exclusion, computed by the Controller.\n"
+                }
+            },
+            "required": [
+                "applyStrategy",
+                "collectionId",
+                "name",
+                "version"
+            ],
+            "inputProperties": {
+                "applyStrategy": {
+                    "type": "string",
+                    "description": "Rollout strategy: `always`, `never` (staged but inactive), `percentage_user_match`, or `percentage_device_match`.\nDefaults to `always`.\n"
+                },
+                "applyStrategyPercentage": {
+                    "type": "integer",
+                    "description": "The match percentage (0-255, in ~0.5% increments) used when `apply_strategy` is `percentage_user_match` or\n`percentage_device_match`.\n"
+                },
+                "collectionId": {
+                    "type": "string",
+                    "description": "The ID of the collection whose CIDR members are excluded from the tunnel. The collection must already exist.\n"
+                },
+                "matchOnlyDeviceGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Apply only to devices in these device group IDs.\n"
+                },
+                "matchOnlyDeviceOs": {
+                    "type": "string",
+                    "description": "Apply only to devices with this OS: `windows`, `macos`, `linux`, `ios`, `android`, `chromeos`, `bowtie.Controller`, or\n`unknown`. Changing or removing this recreates the exclusion.\n"
+                },
+                "matchOnlyDeviceType": {
+                    "type": "string",
+                    "description": "Apply only to devices of this type: `laptop`, `desktop`, `mobile`, `server`, or `other`. Changing or removing this\nrecreates the exclusion.\n"
+                },
+                "matchOnlyOwnership": {
+                    "type": "string",
+                    "description": "Apply only to devices owned by this organization ID. Changing or removing this recreates the exclusion.\n"
+                },
+                "matchOnlyUserGroups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Apply only to devices whose user is in these user group IDs.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable name for the exclusion.\n"
+                },
+                "onlyIfWanMatchesCidrs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "If set, the exclusion only applies when the device's WAN IP falls within one of these CIDRs (for example, an office\nnetwork).\n"
+                },
+                "sites": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The site IDs this exclusion applies to. Omit to apply to all sites.\n"
+                }
+            },
+            "requiredInputs": [
+                "collectionId"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering RouteExclusion resources.\n",
+                "properties": {
+                    "applyStrategy": {
+                        "type": "string",
+                        "description": "Rollout strategy: `always`, `never` (staged but inactive), `percentage_user_match`, or `percentage_device_match`.\nDefaults to `always`.\n"
+                    },
+                    "applyStrategyPercentage": {
+                        "type": "integer",
+                        "description": "The match percentage (0-255, in ~0.5% increments) used when `apply_strategy` is `percentage_user_match` or\n`percentage_device_match`.\n"
+                    },
+                    "collectionId": {
+                        "type": "string",
+                        "description": "The ID of the collection whose CIDR members are excluded from the tunnel. The collection must already exist.\n"
+                    },
+                    "matchOnlyDeviceGroups": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Apply only to devices in these device group IDs.\n"
+                    },
+                    "matchOnlyDeviceOs": {
+                        "type": "string",
+                        "description": "Apply only to devices with this OS: `windows`, `macos`, `linux`, `ios`, `android`, `chromeos`, `bowtie.Controller`, or\n`unknown`. Changing or removing this recreates the exclusion.\n"
+                    },
+                    "matchOnlyDeviceType": {
+                        "type": "string",
+                        "description": "Apply only to devices of this type: `laptop`, `desktop`, `mobile`, `server`, or `other`. Changing or removing this\nrecreates the exclusion.\n"
+                    },
+                    "matchOnlyOwnership": {
+                        "type": "string",
+                        "description": "Apply only to devices owned by this organization ID. Changing or removing this recreates the exclusion.\n"
+                    },
+                    "matchOnlyUserGroups": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Apply only to devices whose user is in these user group IDs.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Human-readable name for the exclusion.\n"
+                    },
+                    "onlyIfWanMatchesCidrs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "If set, the exclusion only applies when the device's WAN IP falls within one of these CIDRs (for example, an office\nnetwork).\n"
+                    },
+                    "sites": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "The site IDs this exclusion applies to. Omit to apply to all sites.\n"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "A content hash of the exclusion, computed by the Controller.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/site:Site": {
+            "properties": {
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the site.\n"
+                }
+            },
+            "required": [
+                "lastUpdated",
+                "name"
+            ],
+            "inputProperties": {
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of the site.\n"
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Site resources.\n",
+                "properties": {
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name of the site.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/siteRange:SiteRange": {
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "description": "Long-form description for this site.\n"
+                },
+                "ipv4Range": {
+                    "type": "string",
+                    "description": "The IPv4 CIDR range for this site range. **Mutually exclusive with `ipv6_range`**.\n"
+                },
+                "ipv6Range": {
+                    "type": "string",
+                    "description": "The IPv6 CIDR range for this site range. **Mutually exclusive with `ipv4_range`**.\n"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "metric": {
+                    "type": "integer",
+                    "description": "The metric for this range. Currently unused but may be in future updates.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of this range.\n"
+                },
+                "siteId": {
+                    "type": "string",
+                    "description": "The Site ID that this range should be associated with.\n"
+                },
+                "weight": {
+                    "type": "integer",
+                    "description": "The weight for this range. Currently unused but may be in future updates.\n"
+                }
+            },
+            "required": [
+                "lastUpdated",
+                "metric",
+                "name",
+                "siteId",
+                "weight"
+            ],
+            "inputProperties": {
+                "description": {
+                    "type": "string",
+                    "description": "Long-form description for this site.\n"
+                },
+                "ipv4Range": {
+                    "type": "string",
+                    "description": "The IPv4 CIDR range for this site range. **Mutually exclusive with `ipv6_range`**.\n"
+                },
+                "ipv6Range": {
+                    "type": "string",
+                    "description": "The IPv6 CIDR range for this site range. **Mutually exclusive with `ipv4_range`**.\n"
+                },
+                "metric": {
+                    "type": "integer",
+                    "description": "The metric for this range. Currently unused but may be in future updates.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The human readable name of this range.\n"
+                },
+                "siteId": {
+                    "type": "string",
+                    "description": "The Site ID that this range should be associated with.\n"
+                },
+                "weight": {
+                    "type": "integer",
+                    "description": "The weight for this range. Currently unused but may be in future updates.\n"
+                }
+            },
+            "requiredInputs": [
+                "siteId"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering SiteRange resources.\n",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Long-form description for this site.\n"
+                    },
+                    "ipv4Range": {
+                        "type": "string",
+                        "description": "The IPv4 CIDR range for this site range. **Mutually exclusive with `ipv6_range`**.\n"
+                    },
+                    "ipv6Range": {
+                        "type": "string",
+                        "description": "The IPv6 CIDR range for this site range. **Mutually exclusive with `ipv4_range`**.\n"
+                    },
+                    "lastUpdated": {
+                        "type": "string"
+                    },
+                    "metric": {
+                        "type": "integer",
+                        "description": "The metric for this range. Currently unused but may be in future updates.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The human readable name of this range.\n"
+                    },
+                    "siteId": {
+                        "type": "string",
+                        "description": "The Site ID that this range should be associated with.\n"
+                    },
+                    "weight": {
+                        "type": "integer",
+                        "description": "The weight for this range. Currently unused but may be in future updates.\n"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "bowtie:index/user:User": {
+            "properties": {
+                "authzControlPlane": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Control Plane UI and API.\n"
+                },
+                "authzDevices": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Devices UI and API.\n"
+                },
+                "authzPolicies": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Policies UI and API.\n"
+                },
+                "authzUsers": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Users UI and API.\n"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "The user's email.\n"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Configures if the user is `Active` or `Disabled`.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The user's name.\n"
+                },
+                "role": {
+                    "type": "string",
+                    "description": "What role the user is assigned. Value must be one of `Ownder`, `User`, `FullAdministrator`, or `LimitedAdministrator`.\n"
+                }
+            },
+            "required": [
+                "authzControlPlane",
+                "authzDevices",
+                "authzPolicies",
+                "authzUsers",
+                "email",
+                "enabled",
+                "name",
+                "role"
+            ],
+            "inputProperties": {
+                "authzControlPlane": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Control Plane UI and API.\n"
+                },
+                "authzDevices": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Devices UI and API.\n"
+                },
+                "authzPolicies": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Policies UI and API.\n"
+                },
+                "authzUsers": {
+                    "type": "boolean",
+                    "description": "Grants the user access to the Users UI and API.\n"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "The user's email.\n"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Configures if the user is `Active` or `Disabled`.\n"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The user's name.\n"
+                },
+                "role": {
+                    "type": "string",
+                    "description": "What role the user is assigned. Value must be one of `Ownder`, `User`, `FullAdministrator`, or `LimitedAdministrator`.\n"
+                }
+            },
+            "requiredInputs": [
+                "email"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering User resources.\n",
+                "properties": {
+                    "authzControlPlane": {
+                        "type": "boolean",
+                        "description": "Grants the user access to the Control Plane UI and API.\n"
+                    },
+                    "authzDevices": {
+                        "type": "boolean",
+                        "description": "Grants the user access to the Devices UI and API.\n"
+                    },
+                    "authzPolicies": {
+                        "type": "boolean",
+                        "description": "Grants the user access to the Policies UI and API.\n"
+                    },
+                    "authzUsers": {
+                        "type": "boolean",
+                        "description": "Grants the user access to the Users UI and API.\n"
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "The user's email.\n"
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Configures if the user is `Active` or `Disabled`.\n"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The user's name.\n"
+                    },
+                    "role": {
+                        "type": "string",
+                        "description": "What role the user is assigned. Value must be one of `Ownder`, `User`, `FullAdministrator`, or `LimitedAdministrator`.\n"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "functions": {
+        "bowtie:index/getCollection:getCollection": {
+            "inputs": {
+                "description": "A collection of arguments for invoking getCollection.\n",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ]
+            },
+            "outputs": {
+                "description": "A collection of values returned by getCollection.\n",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "description",
+                    "id",
+                    "name"
+                ]
+            }
+        },
+        "bowtie:index/getDevice:getDevice": {
+            "inputs": {
+                "description": "A collection of arguments for invoking getDevice.\n",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id"
+                ]
+            },
+            "outputs": {
+                "description": "A collection of values returned by getDevice.\n",
+                "properties": {
+                    "assignedToUser": {
+                        "type": "string"
+                    },
+                    "controllerId": {
+                        "type": "string"
+                    },
+                    "deviceOs": {
+                        "type": "string"
+                    },
+                    "deviceType": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "ipv6": {
+                        "type": "string"
+                    },
+                    "lastSeen": {
+                        "type": "string"
+                    },
+                    "lastSeenVersion": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "publicKey": {
+                        "type": "string"
+                    },
+                    "serial": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "assignedToUser",
+                    "controllerId",
+                    "deviceOs",
+                    "deviceType",
+                    "id",
+                    "ipv6",
+                    "lastSeen",
+                    "lastSeenVersion",
+                    "name",
+                    "publicKey",
+                    "serial",
+                    "state"
+                ]
+            }
+        },
+        "bowtie:index/getDeviceGroup:getDeviceGroup": {
+            "inputs": {
+                "description": "A collection of arguments for invoking getDeviceGroup.\n",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ]
+            },
+            "outputs": {
+                "description": "A collection of values returned by getDeviceGroup.\n",
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "description",
+                    "id",
+                    "name"
+                ]
+            }
+        },
+        "bowtie:index/getGroup:getGroup": {
+            "inputs": {
+                "description": "A collection of arguments for invoking getGroup.\n",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ]
+            },
+            "outputs": {
+                "description": "A collection of values returned by getGroup.\n",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "name"
+                ]
+            }
+        },
+        "bowtie:index/getResourceGroup:getResourceGroup": {
+            "inputs": {
+                "description": "A collection of arguments for invoking getResourceGroup.\n",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ]
+            },
+            "outputs": {
+                "description": "A collection of values returned by getResourceGroup.\n",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "inheriteds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "resources": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "inheriteds",
+                    "name",
+                    "resources"
+                ]
+            }
+        },
+        "bowtie:index/getUser:getUser": {
+            "inputs": {
+                "description": "A collection of arguments for invoking getUser.\n",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "email"
+                ]
+            },
+            "outputs": {
+                "description": "A collection of values returned by getUser.\n",
+                "properties": {
+                    "authzControlPlane": {
+                        "type": "boolean"
+                    },
+                    "authzDevices": {
+                        "type": "boolean"
+                    },
+                    "authzPolicies": {
+                        "type": "boolean"
+                    },
+                    "authzUsers": {
+                        "type": "boolean"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "authzControlPlane",
+                    "authzDevices",
+                    "authzPolicies",
+                    "authzUsers",
+                    "email",
+                    "id",
+                    "name",
+                    "status"
+                ]
+            }
+        }
+    }
+}

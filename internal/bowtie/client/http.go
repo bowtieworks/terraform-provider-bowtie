@@ -1,10 +1,15 @@
 package client
 
 import (
+	"bytes"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -26,15 +31,22 @@ type AuthPayload struct {
 
 const apiVersionPrefix = "/-net/api/v0"
 
-func NewClient(host, username, password string, lazy_auth bool, tagged_locations bool) (*Client, error) {
+func NewClient(host, username, password string, lazy_auth, tagged_locations, insecure bool, caBundle string) (*Client, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, err
 	}
+
+	transport, err := buildTransport(insecure, caBundle)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &Client{
 		HTTPClient: &http.Client{
-			Timeout: 10 * time.Second,
-			Jar:     jar,
+			Timeout:   10 * time.Second,
+			Jar:       jar,
+			Transport: transport,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
@@ -54,6 +66,38 @@ func NewClient(host, username, password string, lazy_auth bool, tagged_locations
 	}
 
 	return c, nil
+}
+
+// buildTransport clones the default transport and applies the provider's TLS
+// settings: skipping verification entirely (insecure) or trusting an additional
+// CA bundle (PEM contents or a path to a PEM file) for private-CA controllers.
+func buildTransport(insecure bool, caBundle string) (*http.Transport, error) {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	tlsConfig := &tls.Config{InsecureSkipVerify: insecure}
+
+	if caBundle != "" {
+		pem, err := caBundlePEM(caBundle)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read ca_bundle: %w", err)
+		}
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(pem) {
+			return nil, fmt.Errorf("ca_bundle did not contain any valid PEM certificates")
+		}
+		tlsConfig.RootCAs = pool
+	}
+
+	transport.TLSClientConfig = tlsConfig
+	return transport, nil
+}
+
+// caBundlePEM resolves the ca_bundle attribute, which may be inline PEM or a
+// path to a PEM file on disk.
+func caBundlePEM(caBundle string) ([]byte, error) {
+	if strings.Contains(caBundle, "-----BEGIN") {
+		return []byte(caBundle), nil
+	}
+	return os.ReadFile(caBundle)
 }
 
 // Check that the client has a login cookie, and if not, authenticate
@@ -112,4 +156,44 @@ func (c *Client) getHostURL(path string) string {
 		return ""
 	}
 	return fmt.Sprintf("%s%s%s", c.hostURL, apiVersionPrefix, path)
+}
+
+// doJSONWithFallback sends the request to the first of the supplied paths that
+// does not return a 404, unmarshaling the response into out (when non-nil).
+// Controller versions disagree on whether a nested index route carries a
+// trailing slash, so callers pass both forms and the client uses whichever the
+// Controller serves.
+func (c *Client) doJSONWithFallback(method string, body []byte, out any, paths ...string) error {
+	var lastErr error
+	for _, path := range paths {
+		var reader io.Reader
+		if body != nil {
+			reader = bytes.NewReader(body)
+		}
+
+		req, err := http.NewRequest(method, c.getHostURL(path), reader)
+		if err != nil {
+			return err
+		}
+
+		respBody, err := c.doRequest(req)
+		if err != nil {
+			lastErr = err
+			if strings.Contains(err.Error(), "HTTP 404") {
+				continue
+			}
+			return err
+		}
+
+		if out != nil {
+			return json.Unmarshal(respBody, out)
+		}
+		return nil
+	}
+	return lastErr
+}
+
+// getListJSON GETs the first of the supplied paths that does not 404.
+func (c *Client) getListJSON(out any, paths ...string) error {
+	return c.doJSONWithFallback(http.MethodGet, nil, out, paths...)
 }

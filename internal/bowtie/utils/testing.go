@@ -14,8 +14,10 @@ func NewEnvClient() (*client.Client, error) {
 	host := os.Getenv("BOWTIE_HOST")
 	username := os.Getenv("BOWTIE_USERNAME")
 	password := os.Getenv("BOWTIE_PASSWORD")
+	insecure := os.Getenv("BOWTIE_INSECURE") == "true" || os.Getenv("BOWTIE_INSECURE") == "1"
+	caBundle := os.Getenv("BOWTIE_CA_BUNDLE")
 
-	c, err := client.NewClient(host, username, password, false, true)
+	c, err := client.NewClient(host, username, password, false, true, insecure, caBundle)
 	return c, err
 }
 

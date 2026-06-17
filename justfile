@@ -3,6 +3,7 @@ envvars := "config.env"
 set dotenv-filename := "config.env"
 
 container_cmd := env_var_or_default("COMPOSE_CMD", "docker-compose")
+go_cmd := env_var_or_default("GO", "/usr/local/go/bin/go")
 # This is the production bowtienet/registry bowtie-server image.
 #
 # To use the staging/release candidate image, use 5633314 instead.
@@ -51,6 +52,10 @@ acceptance-test: container
 	just stop-container || true
 	# Exit code of the actual tests:
 	exit $result
+
+# Run the policy-engine branch functional tests against the configured controller
+functional-test-policy-engine:
+	TF_ACC=1 {{go_cmd}} test -v ./internal/bowtie/test -count=1 -run 'TestAcc(PolicyEngineResources|RouteExclusionResource|OrgRangeResources|IPv4RangeOutOfBandDeleteRecreates)'
 
 # Generate a SITE_ID for the test container in config.env
 site-id:

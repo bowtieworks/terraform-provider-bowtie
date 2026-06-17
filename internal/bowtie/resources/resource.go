@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,6 +21,7 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &TemplateResource{}
 var _ resource.ResourceWithImportState = &TemplateResource{}
+var _ resource.ResourceWithValidateConfig = &resourceResource{}
 
 type resourceResource struct {
 	client *client.Client
@@ -34,9 +36,10 @@ type resourceResourceModel struct {
 }
 
 type resourceLocationModel struct {
-	IP   types.String `tfsdk:"ip"`
-	CIDR types.String `tfsdk:"cidr"`
-	DNS  types.String `tfsdk:"dns"`
+	IP         types.String `tfsdk:"ip"`
+	CIDR       types.String `tfsdk:"cidr"`
+	DNS        types.String `tfsdk:"dns"`
+	Collection types.String `tfsdk:"collection"`
 }
 
 type resourcePortsModel struct {
@@ -78,7 +81,7 @@ Note that defining these resources does not implicitly grant or deny access to t
 				Required: true,
 			},
 			"location": schema.SingleNestedAttribute{
-				MarkdownDescription: "The address of the resource. May be a CIDR address, single IP, or DNS name.",
+				MarkdownDescription: "The address of the resource. Set exactly one of `ip`, `cidr`, `dns`, or `collection`.",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"ip": schema.StringAttribute{
@@ -88,16 +91,42 @@ Note that defining these resources does not implicitly grant or deny access to t
 							stringvalidator.ExactlyOneOf(path.Expressions{
 								path.MatchRelative().AtParent().AtName("cidr"),
 								path.MatchRelative().AtParent().AtName("dns"),
+								path.MatchRelative().AtParent().AtName("collection"),
 							}...),
 						},
 					},
 					"cidr": schema.StringAttribute{
 						MarkdownDescription: "A CIDR address reachable from behind your Bowtie Controller.",
 						Optional:            true,
+						Validators: []validator.String{
+							stringvalidator.ExactlyOneOf(path.Expressions{
+								path.MatchRelative().AtParent().AtName("ip"),
+								path.MatchRelative().AtParent().AtName("dns"),
+								path.MatchRelative().AtParent().AtName("collection"),
+							}...),
+						},
 					},
 					"dns": schema.StringAttribute{
 						MarkdownDescription: "A DNS name pointing to a resource reachable from behind your Bowtie Controller.",
 						Optional:            true,
+						Validators: []validator.String{
+							stringvalidator.ExactlyOneOf(path.Expressions{
+								path.MatchRelative().AtParent().AtName("ip"),
+								path.MatchRelative().AtParent().AtName("cidr"),
+								path.MatchRelative().AtParent().AtName("collection"),
+							}...),
+						},
+					},
+					"collection": schema.StringAttribute{
+						MarkdownDescription: "The ID of a collection whose members this resource should match. Requires the default tagged location format.",
+						Optional:            true,
+						Validators: []validator.String{
+							stringvalidator.ExactlyOneOf(path.Expressions{
+								path.MatchRelative().AtParent().AtName("ip"),
+								path.MatchRelative().AtParent().AtName("cidr"),
+								path.MatchRelative().AtParent().AtName("dns"),
+							}...),
+						},
 					},
 				},
 			},
@@ -142,6 +171,7 @@ func (r *resourceResource) Configure(ctx context.Context, req resource.Configure
 			"Unexpected Resource Configuration Type",
 			fmt.Sprintf("Expected *client.Client, got: %T, please report this to the provider.", req.ProviderData),
 		)
+		return
 	}
 
 	r.client = client
@@ -175,38 +205,10 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		plan.ID = types.StringValue(uuid.NewString())
 	}
 
-	var location client.BowtieResourceLocation
-	if r.client.Tagged_locations {
-		var locationType string
-		var locationValue string
-		if !plan.Location.CIDR.IsNull() {
-			locationType = "cidr"
-			locationValue = plan.Location.CIDR.ValueString()
-		} else if !plan.Location.IP.IsNull() {
-			locationType = "ip"
-			locationValue = plan.Location.IP.ValueString()
-		} else if !plan.Location.DNS.IsNull() {
-			locationType = "dns"
-			locationValue = plan.Location.DNS.ValueString()
-		}
-		location.Tagged = &client.BowtieResourceLocationTagged{
-			Type:  locationType,
-			Value: locationValue,
-		}
-	} else {
-		var ip, cidr, dns string
-		if !plan.Location.CIDR.IsNull() {
-			cidr = plan.Location.CIDR.ValueString()
-		} else if !plan.Location.IP.IsNull() {
-			ip = plan.Location.IP.ValueString()
-		} else if !plan.Location.DNS.IsNull() {
-			dns = plan.Location.DNS.ValueString()
-		}
-		location.Untagged = &client.BowtieResourceLocationUntagged{
-			IP:   ip,
-			CIDR: cidr,
-			DNS:  dns,
-		}
+	location, locationDiags := resourceLocationToClient(plan.Location, r.client.Tagged_locations)
+	resp.Diagnostics.Append(locationDiags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	_, err := r.client.UpsertResource(
@@ -279,6 +281,13 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 				state.Location.CIDR = types.StringNull()
 				state.Location.DNS = types.StringValue(resource.Location.Tagged.Value)
 				state.Location.IP = types.StringNull()
+			}
+		case "collection":
+			{
+				state.Location.CIDR = types.StringNull()
+				state.Location.DNS = types.StringNull()
+				state.Location.IP = types.StringNull()
+				state.Location.Collection = types.StringValue(resource.Location.Tagged.Value)
 			}
 		}
 	} else {
@@ -357,38 +366,10 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var location client.BowtieResourceLocation
-	if r.client.Tagged_locations {
-		var locationType string
-		var locationValue string
-		if !plan.Location.CIDR.IsNull() {
-			locationType = "cidr"
-			locationValue = plan.Location.CIDR.ValueString()
-		} else if !plan.Location.IP.IsNull() {
-			locationType = "ip"
-			locationValue = plan.Location.IP.ValueString()
-		} else if !plan.Location.DNS.IsNull() {
-			locationType = "dns"
-			locationValue = plan.Location.DNS.ValueString()
-		}
-		location.Tagged = &client.BowtieResourceLocationTagged{
-			Type:  locationType,
-			Value: locationValue,
-		}
-	} else {
-		var ip, cidr, dns string
-		if !plan.Location.CIDR.IsNull() {
-			cidr = plan.Location.CIDR.ValueString()
-		} else if !plan.Location.IP.IsNull() {
-			ip = plan.Location.IP.ValueString()
-		} else if !plan.Location.DNS.IsNull() {
-			dns = plan.Location.DNS.ValueString()
-		}
-		location.Untagged = &client.BowtieResourceLocationUntagged{
-			IP:   ip,
-			CIDR: cidr,
-			DNS:  dns,
-		}
+	location, locationDiags := resourceLocationToClient(plan.Location, r.client.Tagged_locations)
+	resp.Diagnostics.Append(locationDiags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	_, err := r.client.UpsertResource(
@@ -429,4 +410,78 @@ func (r *resourceResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *resourceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config resourceResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(validateResourceLocation(config.Location)...)
+}
+
+func validateResourceLocation(location *resourceLocationModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if location == nil {
+		diags.AddAttributeError(path.Root("location"), "Missing location", "A resource location is required.")
+		return diags
+	}
+
+	set := 0
+	for _, value := range []types.String{location.IP, location.CIDR, location.DNS, location.Collection} {
+		if isSet(value) {
+			set++
+		}
+	}
+	if set != 1 {
+		diags.AddAttributeError(
+			path.Root("location"),
+			"Invalid resource location",
+			fmt.Sprintf("Set exactly one of ip, cidr, dns, or collection, but %d were configured.", set),
+		)
+	}
+	return diags
+}
+
+func resourceLocationToClient(location *resourceLocationModel, taggedLocations bool) (client.BowtieResourceLocation, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	diags.Append(validateResourceLocation(location)...)
+	if diags.HasError() {
+		return client.BowtieResourceLocation{}, diags
+	}
+
+	if taggedLocations {
+		switch {
+		case isSet(location.CIDR):
+			return client.BowtieResourceLocation{Tagged: &client.BowtieResourceLocationTagged{Type: "cidr", Value: location.CIDR.ValueString()}}, diags
+		case isSet(location.IP):
+			return client.BowtieResourceLocation{Tagged: &client.BowtieResourceLocationTagged{Type: "ip", Value: location.IP.ValueString()}}, diags
+		case isSet(location.DNS):
+			return client.BowtieResourceLocation{Tagged: &client.BowtieResourceLocationTagged{Type: "dns", Value: location.DNS.ValueString()}}, diags
+		case isSet(location.Collection):
+			return client.BowtieResourceLocation{Tagged: &client.BowtieResourceLocationTagged{Type: "collection", Value: location.Collection.ValueString()}}, diags
+		}
+	}
+
+	if isSet(location.Collection) {
+		diags.AddAttributeError(
+			path.Root("location").AtName("collection"),
+			"Collection locations require tagged location format",
+			"location.collection cannot be used when provider tagged_locations is false.",
+		)
+		return client.BowtieResourceLocation{}, diags
+	}
+
+	untagged := client.BowtieResourceLocationUntagged{}
+	switch {
+	case isSet(location.CIDR):
+		untagged.CIDR = location.CIDR.ValueString()
+	case isSet(location.IP):
+		untagged.IP = location.IP.ValueString()
+	case isSet(location.DNS):
+		untagged.DNS = location.DNS.ValueString()
+	}
+	return client.BowtieResourceLocation{Untagged: &untagged}, diags
 }
